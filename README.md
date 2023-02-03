@@ -12,7 +12,7 @@ __`__getitem__`의 return값__
 `(waveform:torch.Tensor, label:int)`을 return 한다.  
   
 - `waveform` - 특정 발성에 대한 `4 * 16000`개 frame의 waveform
-    - 이때 waveform의 shape은 `[4 * 16000]`이다.  
+    - 이때 waveform의 shape은 `[1, 4 * 16000]`이다.  
 - `label` - waveform의 화자를 구분하는 번호(1~1211 중 하나)  
 
 ### `TestDataset`  
@@ -21,10 +21,10 @@ __`__getitem__`의 return값__
 `(waveforms1:torch.Tensor, waveforms2:torch.Tensor, label:int)`을 return 한다.  
   
 - `waveforms1` - 화자1의 특정 발성에 대한 38개의(변동가능) waveform
-    - 이것의 shape은 `[38, 4 * 16000]`이다.  
+    - 이것의 shape은 `[38, 1, 4 * 16000]`이다.  
 
 - `waveforms2` - 화자2의 특정 발성에 대한 38개의(변동가능) waveform
-    - 이것의 shape은 `[38, 4 * 16000]`이다.
+    - 이것의 shape은 `[38, 1, 4 * 16000]`이다.
 
 - `label` - 화자1과 화자2가 동일인물인지 나타내는 라벨.
     - `0` - 다른 화자
@@ -38,10 +38,10 @@ __입력__
 특정한 길이의 waveform을 입력으로 받는다.  
   
 __입력에 대한 처리__  
-
+입력을 mel spectogram화 하여 신경망을 통과시킨다. 
 
 __출력__  
-
+`is_test`의 bool값에 따라 embedding 혹은 classification값을 출력한다. 
 
 ## `trainer.py`
 `Trainer`라는 클래스를 정의한다.
