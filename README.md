@@ -1,5 +1,16 @@
-#
+## 정보
+- train 화자 수: 1211명
+- window length: 400
+- hop length: 160
+- 가장긴 frame 개수: 2318721
 
+## `main.py`  
+프로그램의 시작점. 각 객체들을 초기화 시킨다.
+  
+## `arguments.py`  
+hyper parameter, system arguments등을 정의한다.  
+기본적으로 main.py에서 해당 파일을 import하여 초기화시 사용하는것을 예상하고 있으며,   
+각 test, train, model등 logic에서 learning rate, weight decay등 필요한것이 있을경우 추가로 참조할것.
 
 ## `dataset.py`  
 두가지의 클래스를 정의한다.  
@@ -18,7 +29,7 @@ __`__getitem__`의 return값__
 ### `TestDataset`  
 
 __`__getitem__`의 return값__  
-`(waveforms1:torch.Tensor, waveforms2:torch.Tensor, label:int)`을 return 한다.  
+`(ㅑㅇ1:torch.Tensor, waveforms2:torch.Tensor, label:int)`을 return 한다.  
   
 - `waveforms1` - 화자1의 특정 발성에 대한 38개의(변동가능) waveform
     - 이것의 shape은 `[38, 1, 4 * 16000]`이다.  
