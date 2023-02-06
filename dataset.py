@@ -7,10 +7,27 @@ from tqdm import trange
 
 NUM_TRAIN_SPEAKER = 1211
 NUM_FRAME_PER_INPUT = 16000 * 4
-NUM_SEG_PER_UTTER = 28
 
-#def resizeWaveform(waveform:torch.Tensor):
+def resizeWaveform(waveform:torch.Tensor):
+    """_summary_
+    waveform의 frame수는 NUM_FRAME_PER_INPUT 이상이어야한다.
+    """
+    _, n_frames_wf = waveform.shape
     
+    # 길이조정 필요없는경우
+    if n_frames_wf >= NUM_FRAME_PER_INPUT:
+        return waveform
+        
+    residue = NUM_FRAME_PER_INPUT % n_frames_wf
+    tensor_list = []
+            
+    for i in range(0, NUM_FRAME_PER_INPUT // n_frames_wf):
+        tensor_list.append(waveform)
+    if residue > 0:
+        tensor_list.append(waveform[:, 0:residue])
+                
+    return torch.cat(tensor_list, 1)
+
     
 
 class TrainDataset(Dataset):
@@ -47,8 +64,8 @@ class TestDataset(Dataset):
         super().__init__()
         self.annotation_table = pd.read_csv(annotations_file_path, delim_whitespace=True)
         self.num_label = len(self.labels)
-        self.id_ans_list = []
-        self.all_feature = {}
+        self.id_to_waveform = {}
+        self.cache = []
 
         for r_idx in trange(self.num_label, desc="loading test data"):
             """
@@ -58,42 +75,39 @@ class TestDataset(Dataset):
             # 오디오에 대한 id = path
             id1 = self.labels.iloc[r_idx, 1]
             id2 = self.labels.iloc[r_idx, 2]
-            
-            if id1 not in self.all_feature:
+                        
+            if id1 not in self.id_to_waveform:   
                 path = audio_dir + '/' + id1
                 wf, _ = torchaudio.load(path)
-                self.all_feature[id1] = self.getSplittedWaveform(wf)
+                wf = resizeWaveform(wf)
+                self.id_to_waveform[id1] = wf                
                 
             if id2 not in self.all_feature:
                 path = audio_dir + '/' + id2
                 wf, _ = torchaudio.load(path)
-                self.all_feature[id2] = self.getSplittedWaveform(wf)
+                wf = resizeWaveform(wf)
+                self.id_to_waveform[id2] = wf  
             
-            self.id_ans_list.append((id1, id2, label))
-        
-        print(len(self.all_feature))
-        
-    def getSplittedWaveform(waveform:torch.Tensor):
-        waveform = resizeWaveform(waveform)
-                
-        _, n_frames_wf = waveform.shape
-    
-        start_frs = torch.linspace(start = 0, end = n_frames_wf - NUM_FRAME_PER_INPUT, steps = NUM_SEG_PER_UTTER, dtype = int)
-    
-        tensor_list = []
-        for start in start_frs:
-            end = start + NUM_FRAME_PER_INPUT
-            tensor_list.append(waveform[:, start : end])
-        
-        return torch.concat(tensor_list, dim = 0)
+            self.cache.append((self.id_to_waveform[id1], id1, self.id_to_waveform[id2], id2, label))
             
     def __len__(self):
         return self.num_label
     
     def __getitem__(self, idx:int):
         """
+        `(waveform1:torch.Tensor, wf_id1:str, waveform2:torch.Tensor, wf_id2:str, label:int)`을 return 한다. 
+        - `waveform1` - 화자1의 특정 발성에 대한 waveform
+            - 이것의 shape은 `[1, sec * 16000]`이다. 이때 `sec`은 4이상    
+  
+        - `wf_id1` - `waveform1`에 대한 고유한 id  
+  
+        - `waveform2` - 화자2의 특정 발성에 대한 waveform
+            - 이것의 shape은 `[1, sec * 16000]`이다. 이때 `sec`은 4이상  
+  
+        - `wf_id2` - `waveform2`에 대한 고유한 id  
+  
+        - `label` - 화자1과 화자2가 동일인물인지 나타내는 라벨.
+            - `0` - 다른 화자
+            - `1` - 같은 화자
         """
         return self.cache[idx]
-    
-    def getAllFeature(self):
-        return self.all_feature
