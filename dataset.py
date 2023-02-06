@@ -48,9 +48,8 @@ class TrainDataset(Dataset):
             wf, _ = torchaudio.load(path)
             wf = resizeWaveform(wf)
             
-            speaker_num = int(self.annotation_table.iloc[r_idx, 0])            
+            speaker_num = int(self.annotation_table.iloc[r_idx, 0]) - 1           
             self.cache.append((wf, speaker_num))
-        
         
     def __len__(self):
         return self.num_utter

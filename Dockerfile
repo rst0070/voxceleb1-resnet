@@ -11,4 +11,4 @@ COPY ./ /app/
 WORKDIR /app
 
 CMD ["touch", "/app/result.pth"]
-CMD ["python", "main.py"]
+CMD ["python",  "main.py"]

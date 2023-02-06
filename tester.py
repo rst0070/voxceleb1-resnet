@@ -6,7 +6,6 @@ from torch.utils.data import DataLoader
 from dataset import TestDataset
 import torch.nn.functional as F
 
-import numpy as np
 from sklearn import metrics
 from scipy.optimize import brentq
 from scipy.interpolate import interp1d
@@ -16,7 +15,7 @@ from arguments import get_args
 
 sys_args, exp_args = get_args()
 embedding_size = exp_args['embedding_size']
-sample_num = exp_args['sample_num']
+SAMPLE_NUM = exp_args['sample_num']
 
 
 GPU = sys_args['gpu']
@@ -34,28 +33,44 @@ class Tester:
         data_dict = self.dataset.getAllFeature()
         self.embs = {}
         
+        emb_list = []
+        id_list = []
         frames = 16000*4 # 4초 프레임 개수
-        self.model.eval()
-        with torch.no_grad():
-            for audio_id, features in tqdm(data_dict.items(), desc="getting embeddings"):
+        for audio_id, waveform in tqdm(data_dict.items(), desc="getting embeddings"):
+            _, n_frames_wf = waveform
+        
+            start_frs = torch.linspace(start = 0, end = n_frames_wf - frames, steps = SAMPLE_NUM, dtype = int)
+    
+            tensor_list = []
+            for start in start_frs:
+                end = start + frames
+                tensor = waveform[:, start : end]
+                tensor_list.append(tensor, dim=0)
+            
+            tensor_list = torch.stack(tensor_list, dim = 0)
+            
+            emb_list.append(tensor_list)
+            id_list.append(audio_id)
+            
+        emb_list = torch.tensor
+        # with torch.no_grad():
+        #     for audio_id, features in tqdm(data_dict.items(), desc="getting embeddings"):
                 
-                fragments = np.linspace(0,features.shape[0]-frames,sample_num) # 5개 구간 추출. 각 구간이 시작하는 지점을 저장한다.
+        #         fragments = torch.linspace(start = 0, end = features.shape[1]-frames, step = sample_num, dtype = int) # 5개 구간 추출. 각 구간이 시작하는 지점을 저장한다.
+ 
+        #         temp_embedding = torch.zeros(1,embedding_size)
                 
-                fragments = fragments.astype(np.int64)
-                temp_embedding = torch.zeros(1,embedding_size)
-                
-                for fragment in fragments: # 각 구간의 시작점에서 부터 frames 만큼 잘라서 사용한다.
-                    if features.shape[0] >= frames:
-                        temp_feature = features[fragment:fragment+frames]
-                    else:
-                        temp_feature = np.append(features, np.zeros(frames - features.shape[0]))
-                    temp_feature = torch.FloatTensor(temp_feature).to(GPU)
-                    temp_feature = torch.unsqueeze(torch.unsqueeze(temp_feature,0),0)
-                    temp_feature = self.model(temp_feature, is_test = True)
+        #         for fragment in fragments: # 각 구간의 시작점에서 부터 frames 만큼 잘라서 사용한다.
+        #             if features.shape[0] >= frames:
+        #                 temp_feature = features[fragment:fragment+frames]
+        #             else:
+        #                 temp_feature = np.append(features, np.zeros(frames - features.shape[0]))
+        #             temp_feature = torch.FloatTensor(temp_feature).to(GPU)
+        #             temp_feature = torch.unsqueeze(temp_feature,0)
+        #             temp_feature = self.model(temp_feature, is_test = True)
                     
-                    temp_embedding += temp_feature.to(CPU)
-                self.embs[audio_id] = torch.squeeze(temp_embedding) / sample_num
-                #print('@@@@@@@@@@@@@@', self.embs[audio_id].shape)
+        #             temp_embedding += temp_feature.to(CPU)
+        #         self.embs[audio_id] = torch.squeeze(temp_embedding) / sample_num
             
             
     def idListToEmbListTensor(self, id_list):

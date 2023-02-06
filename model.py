@@ -89,7 +89,8 @@ class ResNet_18(nn.Module):
     def forward(self, x, is_test = False): # x.size = (32, 1, 4*16000)
         x = x.to(GPU)
         x = self.melspec(x) # (32, 1, 40, 400)
-
+        if x.size(0) == 1:
+            x = torch.unsqueeze(x, 0)
         
         x = self.conv0(x) # (32, 64, 20, 200)
 
@@ -106,9 +107,7 @@ class ResNet_18(nn.Module):
 
         x = self.layer4(x) # (32, 512, 2, 13)
 
-        
         x = self.avgpool(x) # (32, 512, 1, 1)
-
         
         x = x.view(x.size(0), -1) # (32, 512)
 

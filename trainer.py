@@ -23,7 +23,7 @@ class Trainer():
 
     def train(self):
         self.model.train()
-        for X, y in tqdm(self.dataloader):
+        for X, y in tqdm(self.dataloader, desc = "training"):
             
             self.optimizer.zero_grad()
             

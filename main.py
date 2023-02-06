@@ -8,7 +8,6 @@ from tqdm import trange
 
 class Main:
     def __init__(self):
-        print(123)
         sys_args, exp_args = arguments.get_args()
         
         GPU = sys_args['gpu']
@@ -39,7 +38,7 @@ class Main:
         
     def start(self):
         
-        for epoch in trange(1, self.max_epoch + 1):
+        for epoch in range(1, self.max_epoch + 1):
             
             self.trainer.train()
             
@@ -49,6 +48,7 @@ class Main:
             
 
 if __name__ == '__main__':
+    #torch.multiprocessing.set_start_method("spawn")
     program = Main()
     program.start()
     
