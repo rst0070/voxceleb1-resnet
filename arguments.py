@@ -22,9 +22,9 @@ def get_args():
 	    'wandb_entity'  : '',
 
         # dataset
-        'path_train_label'  :   'labels/tmp_train_label.csv',
+        'path_train_label'  :   'labels/train_label.csv',
         'path_train'        :   '/data/train',
-        'path_test_label'   :   'labels/tmp_trial_label.csv',
+        'path_test_label'   :   'labels/trial_label.csv',
         'path_test'         :   '/data/test',
 
         # processor
@@ -32,7 +32,7 @@ def get_args():
         'gpu'           : ("cuda" if torch.cuda.is_available() else "mps" if torch.backends.mps.is_available() else "cpu"),
         
         # others
-        'num_workers': 4,
+        'num_workers': 0,
 	    'usable_gpu': None,
     }
 

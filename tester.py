@@ -54,7 +54,8 @@ class Tester:
                     temp_feature = self.model(temp_feature, is_test = True)
                     
                     temp_embedding += temp_feature.to(CPU)
-                self.embs[audio_id] = temp_embedding / sample_num
+                self.embs[audio_id] = torch.squeeze(temp_embedding) / sample_num
+                #print('@@@@@@@@@@@@@@', self.embs[audio_id].shape)
             
             
     def idListToEmbListTensor(self, id_list):
@@ -97,6 +98,8 @@ class Tester:
             embs1 = self.idListToEmbListTensor(audio_id1).to(GPU) # 2차원 [id, node_idx]
             embs2 = self.idListToEmbListTensor(audio_id2).to(GPU)
             
+            #print('*******', embs1.shape)
+            
             sim = F.cosine_similarity(embs1, embs2, dim = 1).to(CPU) # 1차원 형태
             #print(sim)
             sims.append(sim)
@@ -105,4 +108,4 @@ class Tester:
         labels = torch.concat(labels, dim = 0)
         eer = self.getEER(labels, sims)
         print(f"epoch: {epoch}, EER: {eer}")
-        wandb.log({"EER by epoch" : eer})
+        #wandb.log({"EER by epoch" : eer})

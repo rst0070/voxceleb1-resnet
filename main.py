@@ -35,7 +35,7 @@ class Main:
         test_dataset = dataset.TestDataset(annotation_file_path = sys_args['path_test_label'], data_dir = sys_args['path_test'])
         
         self.trainer = trainer.Trainer(model = self.model, dataset = train_dataset, optimizer = optimizer, batch_size = exp_args['batch_size'])
-        self.tester = tester.Tester(model = self.model, dataset = test_dataset, batch_size=1)
+        self.tester = tester.Tester(model = self.model, dataset = test_dataset, batch_size=exp_args['batch_size'])
         
     def start(self):
         
