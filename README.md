@@ -29,25 +29,22 @@ __`__getitem__`의 return값__
 ### `TestDataset`  
 
 __`__getitem__`의 return값__  
-`(waveform1:torch.Tensor, wf_id1:str, waveform2:torch.Tensor, wf_id2:str, label:int)`을 return 한다.  
-  
-- `waveform1` - 화자1의 특정 발성에 대한 waveform
-    - 이것의 shape은 `[1, sec * 16000]`이다. 이때 `sec`은 4이상    
-  
+`(wf_id1:str, wf_id2:str, label:int)`을 return 한다.  
+
 - `wf_id1` - `waveform1`에 대한 고유한 id  
-  
-- `waveform2` - 화자2의 특정 발성에 대한 waveform
-    - 이것의 shape은 `[1, sec * 16000]`이다. 이때 `sec`은 4이상  
-  
 - `wf_id2` - `waveform2`에 대한 고유한 id  
-  
 - `label` - 화자1과 화자2가 동일인물인지 나타내는 라벨.
     - `0` - 다른 화자
     - `1` - 같은 화자
   
 
-`wf_id1`, `wf_id2`를 통해서 waveform들을 효율적으로 관리할 수 있다. (ex. 같은 id인 waveform에 대해 임베딩을 저장하는 방식)  
+`wf_id1`, `wf_id2`를 통해서 아래의 `getAllFeature()`의 값을 조회하여 사용가능
 
+__`getAllFeature()`의 return값__  
+`dict(str : Tensor)`을 return 한다.  
+- 특정 오디오 파일에 대한 고유한 경로와 그 waveform을 key, value로 가지는 dictionary이다.  
+- 이 함수를 통해서 임베딩에 대한 전처리를 할 수 있다.  
+  
 ## `model.py`
 neural network model을 정의한다.  
 neural network는 기본적으로 `torch.nn.Module`을 상속받는 클래스의 형태이어야 한다.  

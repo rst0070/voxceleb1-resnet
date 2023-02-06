@@ -1,5 +1,6 @@
 import os
 import itertools
+import torch
 
 def get_args():
     """
@@ -9,27 +10,33 @@ def get_args():
 		args (dict): system_args + experiment_args
     """
     system_args = {
-		# expeirment info
-		'project'       : '',
-		'name'          : 'experiment_001',
-		'tags'          : ['', ''],
-		'description'   : '~~기준, 뭐가 바뀌었는지 작성',
+	    # expeirment info
+	    'project'       : '',
+	    'name'          : 'experiment_001',
+	    'tags'          : ['', ''],
+	    'description'   : '~~기준, 뭐가 바뀌었는지 작성',
 
-		# log
-		'path_log'      : '/results',
-		'wandb_group'   : '',
-		'wandb_entity'  : '',
+	    # log
+	    'path_log'      : '/results',
+	    'wandb_group'   : '',
+	    'wandb_entity'  : '',
 
         # dataset
+        'path_train_label'  :   'labels/train_label.csv',
         'path_train'    : '/data/VoxCeleb2_TimeStretch/train',
+        'path_test_label'  :   'labels/train_label.csv',
         'path_test'     : '/data/VoxCeleb1',
-		'path_trials'  	: '/data/VoxCeleb1/trials',
-		'path_musan'  	: '/data/musan',
+	    'path_trials'  	: '/data/VoxCeleb1/trials',
+	    'path_musan'  	: '/data/musan',
         'path_rir'      : '/data/RIRS_NOISES/simulated_rirs',
 
+        # processor
+        'cpu'           : "cpu",
+        'gpu'           : ("cuda" if torch.cuda.is_available() else "mps" if torch.backends.mps.is_available() else "cpu"),
+        
         # others
         'num_workers': 4,
-		'usable_gpu': None,
+	    'usable_gpu': None,
     }
 
     experiment_args = {
@@ -52,8 +59,9 @@ def get_args():
         'spec_mask_T'       : 10,
 
         # data processing
+        'sample_num'        : 5,
         'num_seg'           : 5,
-        'num_train_frames'  : 200,
+        'num_train_frames'  : 4 * 16000, # train에서 input 으로 사용할 frame 개수
         'num_test_frames'   : 300,
         
         # learning rate
@@ -64,9 +72,4 @@ def get_args():
         'T_mult'        : 1,
     }
 
-    args = {}
-    for k, v in itertools.chain(system_args.items(), experiment_args.items()):
-        args[k] = v
-    args['path_scripts'] = os.path.dirname(os.path.realpath(__file__))
-
-    return args, system_args, experiment_args
+    return system_args, experiment_args
