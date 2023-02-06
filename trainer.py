@@ -23,16 +23,16 @@ class Trainer():
 
     def train(self):
         self.model.train()
-        for (X, y) in tqdm(self.dataloader):
+        for X, y in tqdm(self.dataloader):
             
             self.optimizer.zero_grad()
             
             X = X.to(GPU)
             y = y.to(GPU)
             
-            pred = self.model(X)
+            pred = self.model(X, is_test = False)
             loss = self.loss_function(pred,y)
             
             loss.backward()
             self.optimizer.step()
-            wandb.log({'Loss by batch':loss})
+            #wandb.log({'Loss by batch':loss})

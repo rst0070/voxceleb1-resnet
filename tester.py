@@ -1,4 +1,5 @@
 # tester.py
+from model import ResNet_18
 import torch
 from tqdm import tqdm
 from torch.utils.data import DataLoader
@@ -18,16 +19,16 @@ embedding_size = exp_args['embedding_size']
 sample_num = exp_args['sample_num']
 
 
-GPU = sys_args['cpu']
-CPU = sys_args['gpu']
+GPU = sys_args['gpu']
+CPU = sys_args['cpu']
 
 class Tester:
     
-    def __init__(self, model, dataset:TestDataset, batch_size):
+    def __init__(self, model:ResNet_18, dataset:TestDataset, batch_size):
         
         self.model = model
         self.dataset = dataset
-        self.loader = DataLoader(dataset, batch_size=batch_size, shuffle=True, num_workers=0)
+        self.loader = DataLoader(dataset, batch_size=batch_size, shuffle=False, num_workers=0)
         
     def prepareEmbedding(self):
         data_dict = self.dataset.getAllFeature()
@@ -49,8 +50,9 @@ class Tester:
                     else:
                         temp_feature = np.append(features, np.zeros(frames - features.shape[0]))
                     temp_feature = torch.FloatTensor(temp_feature).to(GPU)
-                    # temp_feature = torch.unsqueeze(x,0)
-                    temp_feature = self.model(temp_feature)
+                    temp_feature = torch.unsqueeze(torch.unsqueeze(temp_feature,0),0)
+                    temp_feature = self.model(temp_feature, is_test = True)
+                    
                     temp_embedding += temp_feature.to(CPU)
                 self.embs[audio_id] = temp_embedding / sample_num
             
@@ -99,7 +101,6 @@ class Tester:
             #print(sim)
             sims.append(sim)
             labels.append(label)
-            
         sims = torch.concat(sims, dim = 0)
         labels = torch.concat(labels, dim = 0)
         eer = self.getEER(labels, sims)

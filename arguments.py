@@ -22,13 +22,10 @@ def get_args():
 	    'wandb_entity'  : '',
 
         # dataset
-        'path_train_label'  :   'labels/train_label.csv',
-        'path_train'    : '/data/VoxCeleb2_TimeStretch/train',
-        'path_test_label'  :   'labels/train_label.csv',
-        'path_test'     : '/data/VoxCeleb1',
-	    'path_trials'  	: '/data/VoxCeleb1/trials',
-	    'path_musan'  	: '/data/musan',
-        'path_rir'      : '/data/RIRS_NOISES/simulated_rirs',
+        'path_train_label'  :   'labels/tmp_train_label.csv',
+        'path_train'        :   '/data/train',
+        'path_test_label'   :   'labels/tmp_trial_label.csv',
+        'path_test'         :   '/data/test',
 
         # processor
         'cpu'           : "cpu",
@@ -52,7 +49,7 @@ def get_args():
         'C'                 : 1024,
         'num_hidden_layers' : 4,
         'n_class'           : 5994 * 3,
-		'embedding_size'	: 192,
+		'embedding_size'	: 256,
         'aam_margin'        : 0.15,
         'aam_scale'         : 20,
         'spec_mask_F'       : 100,

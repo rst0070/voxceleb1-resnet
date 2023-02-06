@@ -5,6 +5,7 @@ import torchaudio
 import pandas as pd
 from tqdm import trange
 import arguments
+import random
 
 _, exp_args = arguments.get_args()
 
@@ -36,7 +37,7 @@ def resizeWaveform(waveform:torch.Tensor):
 class TrainDataset(Dataset):
     
     def __init__(self, annotation_file_path, data_dir):
-        
+        super().__init__()
         self.annotation_table = pd.read_csv(annotation_file_path, delim_whitespace = True)
         self.num_utter = len(self.annotation_table)
         self.cache = []
@@ -55,7 +56,11 @@ class TrainDataset(Dataset):
         return self.num_utter
     
     def __getitem__(self, idx):
-        return self.cache[idx]
+        wf, ans = self.cache[idx]
+        _, n_fr = wf.shape
+        
+        start_fr = random.randint(0, n_fr - NUM_FRAME_PER_INPUT)
+        return wf[:, start_fr : start_fr + NUM_FRAME_PER_INPUT], ans
     
 class TestDataset(Dataset):
     """_summary_
@@ -63,10 +68,10 @@ class TestDataset(Dataset):
     
     """
     
-    def __init__(self, annotations_file_path, audio_dir):
+    def __init__(self, annotation_file_path, data_dir):
         super().__init__()
-        self.annotation_table = pd.read_csv(annotations_file_path, delim_whitespace=True)
-        self.num_label = len(self.labels)
+        self.annotation_table = pd.read_csv(annotation_file_path, delim_whitespace=True)
+        self.num_label = len(self.annotation_table)
         self.id_to_waveform = {} # 오디오파일의 id와 waveform 대응
         self.cache = [] # getitem 
 
@@ -74,19 +79,19 @@ class TestDataset(Dataset):
             """
             test audio file을 다 불러오고 저장한다.
             """
-            label = int(self.labels.iloc[r_idx, 0])
+            label = int(self.annotation_table.iloc[r_idx, 0])
             # 오디오에 대한 id = path
-            id1 = self.labels.iloc[r_idx, 1]
-            id2 = self.labels.iloc[r_idx, 2]
+            id1 = self.annotation_table.iloc[r_idx, 1]
+            id2 = self.annotation_table.iloc[r_idx, 2]
                         
             if id1 not in self.id_to_waveform:   
-                path = audio_dir + '/' + id1
+                path = data_dir + '/' + id1
                 wf, _ = torchaudio.load(path)
                 wf = resizeWaveform(wf)
                 self.id_to_waveform[id1] = wf                
                 
-            if id2 not in self.all_feature:
-                path = audio_dir + '/' + id2
+            if id2 not in self.id_to_waveform:
+                path = data_dir + '/' + id2
                 wf, _ = torchaudio.load(path)
                 wf = resizeWaveform(wf)
                 self.id_to_waveform[id2] = wf  

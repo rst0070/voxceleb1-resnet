@@ -1,4 +1,5 @@
 import arguments
+from model import ResNet_18
 import torch
 import dataset
 import trainer
@@ -10,9 +11,11 @@ class Main:
         print(123)
         sys_args, exp_args = arguments.get_args()
         
+        GPU = sys_args['gpu']
+        
         self.max_epoch = exp_args['epoch']
         
-        model = None
+        self.model = ResNet_18(embedding_size=exp_args['embedding_size']).to(GPU)
         
         # optimizer 정의
         optimizer = torch.optim.Adam(
@@ -31,8 +34,8 @@ class Main:
         train_dataset = dataset.TrainDataset(annotation_file_path = sys_args['path_train_label'], data_dir = sys_args['path_train'])
         test_dataset = dataset.TestDataset(annotation_file_path = sys_args['path_test_label'], data_dir = sys_args['path_test'])
         
-        self.trainer = trainer.Trainer(model = model, dataset = train_dataset, optimizer = optimizer, batch_size = exp_args['batch_size'])
-        self.tester = tester.Tester(model = model, dataset = test_dataset, batch_size = exp_args['batch_size'])
+        self.trainer = trainer.Trainer(model = self.model, dataset = train_dataset, optimizer = optimizer, batch_size = exp_args['batch_size'])
+        self.tester = tester.Tester(model = self.model, dataset = test_dataset, batch_size=1)
         
     def start(self):
         
@@ -40,7 +43,7 @@ class Main:
             
             self.trainer.train()
             
-            self.tester.test()
+            self.tester.test(epoch = epoch)
             
             self.lr_scheduler.step()
             
