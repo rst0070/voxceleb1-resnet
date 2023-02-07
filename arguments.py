@@ -39,7 +39,7 @@ def get_args():
 
     experiment_args = {
         # experiment
-        'epoch'             : 20,
+        'epoch'             : 40,
         'batch_size'        : 128,
 		'rand_seed'		    : 1,
         
