@@ -4,11 +4,20 @@ import torch
 import dataset
 import trainer
 import tester
-from tqdm import trange
+import os
+import wandb
 
 class Main:
     def __init__(self):
         sys_args, exp_args = arguments.get_args()
+        
+        WANDB_KEY = "7c6c025691da1f01124a2b61a50c7c2932f0fb85"
+        os.system(f"wandb login {WANDB_KEY}")
+        wandb.init(
+            project = "Voxceleb1 resnet18",
+            name = "baseline"
+        )
+        
         
         GPU = sys_args['gpu']
         
