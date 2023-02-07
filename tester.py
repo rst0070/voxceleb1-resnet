@@ -1,5 +1,4 @@
 # tester.py
-from model import ResNet_18
 import torch
 from tqdm import tqdm
 from torch.utils.data import DataLoader
@@ -25,7 +24,7 @@ CPU = sys_args['cpu']
 
 class Tester:
     
-    def __init__(self, model:ResNet_18, dataset:TestDataset, batch_size):
+    def __init__(self, model, dataset:TestDataset, batch_size):
         
         self.model = model
         self.dataset = dataset

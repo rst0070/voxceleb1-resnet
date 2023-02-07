@@ -36,7 +36,7 @@ class Main:
         self.lr_scheduler = torch.optim.lr_scheduler.StepLR(
             optimizer,
             step_size=1,
-            gamma=0.95
+            gamma=0.97
         )
         
         train_dataset = dataset.TrainDataset(annotation_file_path = sys_args['path_train_label'], data_dir = sys_args['path_train'])

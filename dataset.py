@@ -10,7 +10,7 @@ import random
 _, exp_args = arguments.get_args()
 
 #NUM_TRAIN_SPEAKER = 1211
-NUM_FRAME_PER_INPUT = exp_args['num_train_frames']
+NUM_FRAME_PER_INPUT = int(exp_args['num_train_frames'])
 
 def resizeWaveform(waveform:torch.Tensor):
     """_summary_

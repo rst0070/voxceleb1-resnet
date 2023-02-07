@@ -23,9 +23,9 @@ def get_args():
 	    'wandb_entity'  : '',
 
         # dataset
-        'path_train_label'  :   'labels/tmp_train_label.csv',
+        'path_train_label'  :   'labels/train_label.csv',
         'path_train'        :   '/data/train',
-        'path_test_label'   :   'labels/tmp_trial_label.csv',
+        'path_test_label'   :   'labels/trial_label.csv',
         'path_test'         :   '/data/test',
 
         # processor
@@ -39,8 +39,8 @@ def get_args():
 
     experiment_args = {
         # experiment
-        'epoch'             : 80,
-        'batch_size'        : 32,
+        'epoch'             : 100,
+        'batch_size'        : 64,
 		'rand_seed'		    : 1,
         
         # model
@@ -53,11 +53,11 @@ def get_args():
         # data processing
         'test_sample_num'   : 10, # test시 발성에서 몇개의 sample을 뽑아낼것인지
         'num_seg'           : 10,
-        'num_train_frames'  : 3 * 16000, # train에서 input 으로 사용할 frame 개수
+        'num_train_frames'  : int(3.2 * 16000)-1, # train에서 input 으로 사용할 frame 개수
         #'num_test_frames'   : 300,
         
         # learning rate
-        'lr'            : 1e-4,
+        'lr'            : 1e-3,
         'lr_min'        : 1e-6,
 		'weight_decay'  : 1e-5,
         'T_0'           : 80,
