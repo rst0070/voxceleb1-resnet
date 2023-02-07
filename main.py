@@ -19,8 +19,8 @@ class Main:
         # optimizer 정의
         optimizer = torch.optim.Adam(
             self.model.parameters(),
-            lr = 0.001,
-            weight_decay=1e-5
+            lr = exp_args['lr'],
+            weight_decay = exp_args['weight_decay']
         )
         
         # learning rate가 epoch마다 0.95%씩 감소하도록 설정
@@ -45,6 +45,10 @@ class Main:
             self.tester.test(epoch = epoch)
             
             self.lr_scheduler.step()
+            
+    def save(self):
+        sys_args, exp_args = arguments.get_args()
+        torch.save(self.model, sys_args['path_save'])
             
 
 if __name__ == '__main__':
