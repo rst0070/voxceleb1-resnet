@@ -45,7 +45,7 @@ class Tester:
                 feature_list = []
                 
                 for fragment in fragments: # 각 구간의 시작점에서 부터 frames 만큼 잘라서 사용한다.
-                    feature_list.append(features[:, fragment:fragment + NUM_FRAMES])
+                    feature_list.append(features[:, fragment:fragment + int(NUM_FRAMES)])
                 
                 feature_list = torch.stack(feature_list, dim = 0).to(GPU)
                   
@@ -100,8 +100,8 @@ class Tester:
             #print(sim)
             sims.append(sim)
             labels.append(label)
-        sims = torch.concat(sims, dim = 0)
-        labels = torch.concat(labels, dim = 0)
+        sims = torch.cat(sims, dim = 0)
+        labels = torch.cat(labels, dim = 0)
         eer = self.getEER(labels, sims)
         print(f"epoch: {epoch}, EER: {eer}")
-        #wandb.log({"EER by epoch" : eer})
+        # wandb.log({"EER by epoch" : eer})

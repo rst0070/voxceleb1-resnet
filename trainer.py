@@ -35,4 +35,4 @@ class Trainer():
             
             loss.backward()
             self.optimizer.step()
-            #wandb.log({'Loss by batch':loss})
+            # wandb.log({'Loss by batch':loss})

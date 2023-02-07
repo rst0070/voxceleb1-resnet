@@ -3,7 +3,7 @@ import torch.nn as nn
 import torchaudio.transforms as ts
 import arguments
 
-sys_args, _ = arguments.get_args()
+sys_args, exp_args = arguments.get_args()
 GPU = sys_args['gpu']
 
 class Resblock(nn.Module):
@@ -23,11 +23,12 @@ class Resblock(nn.Module):
         self.bn1 = nn.BatchNorm2d(self.hid_ch)
         self.bn2 = nn.BatchNorm2d(self.out_ch)
         
-        self.conv_ps = nn.Conv2d(in_channels=self.in_ch, out_channels=self.out_ch, kernel_size=(1,1), stride=2)
+        self.conv_ps = nn.Conv2d(in_channels=self.in_ch, out_channels=self.out_ch, kernel_size=(2,2), stride=2)
         self.bn_ps = nn.BatchNorm2d(self.out_ch)
 
     def forward(self, x):
         if self.ps:
+            # print('original x:',x.shape)
             a = self.conv1_ps(x)
         else:
             a = self.conv1(x)
@@ -40,7 +41,6 @@ class Resblock(nn.Module):
         if self.ps:
             x = self.conv_ps(x)
             x = self.bn_ps(x)
-
         x = x + a
 
         x = self.relu(x)
@@ -49,12 +49,12 @@ class Resblock(nn.Module):
 
 
 class ResNet_18(nn.Module): 
-    def __init__(self, embedding_size=128): #embedding_size -> hyperparameter 설정
+    def __init__(self, embedding_size=exp_args['embedding_size'],n_mels=exp_args['n_mels']): #embedding_size -> hyperparameter 설정
         super(ResNet_18, self).__init__()
         self.melspec = ts.MelSpectrogram(
             sample_rate=16000, 
             n_fft=512, 
-            n_mels=40, 
+            n_mels=n_mels, 
             win_length=int(25*0.001*16000), 
             hop_length=int(10*0.001*16000), 
             window_fn=torch.hamming_window).to(GPU)
@@ -97,14 +97,9 @@ class ResNet_18(nn.Module):
         x = self.bn1(x)
         x = self.relu(x)
         x = self.maxpool(x) #(32, 64, 10, 100)
-
-
         x = self.layer1(x) # (32, 64, 10, 100)
-
         x = self.layer2(x) # (32, 128, 5, 50)
-
         x = self.layer3(x) # (32, 256, 3, 25)
-
         x = self.layer4(x) # (32, 512, 2, 13)
 
         x = self.avgpool(x) # (32, 512, 1, 1)

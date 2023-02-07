@@ -59,7 +59,7 @@ class TrainDataset(Dataset):
         _, n_fr = wf.shape
         
         start_fr = random.randint(0, n_fr - NUM_FRAME_PER_INPUT)
-        return wf[:, start_fr : start_fr + NUM_FRAME_PER_INPUT], ans
+        return wf[:, start_fr : start_fr + int(NUM_FRAME_PER_INPUT)], ans
     
 class TestDataset(Dataset):
     """_summary_

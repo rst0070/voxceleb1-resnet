@@ -30,7 +30,7 @@ def get_args():
 
         # processor
         'cpu'           : "cpu",
-        'gpu'           : ("cuda" if torch.cuda.is_available() else "mps" if torch.backends.mps.is_available() else "cpu"),
+        'gpu'           : ("cuda:1" if torch.cuda.is_available() else "mps" if torch.backends.mps.is_available() else "cpu"),
         
         # others
         'num_workers': 0,
@@ -39,25 +39,26 @@ def get_args():
 
     experiment_args = {
         # experiment
-        'epoch'             : 40,
-        'batch_size'        : 128,
+        'epoch'             : 100,
+        'batch_size'        : 32,
 		'rand_seed'		    : 1,
         
         # model
-		'embedding_size'	: 256,
+		'embedding_size'	: 512,
         'aam_margin'        : 0.15,
         'aam_scale'         : 20,
         'spec_mask_F'       : 100,
         'spec_mask_T'       : 10,
+        'n_mels'            : 64,
 
         # data processing
-        'test_sample_num'   : 5, # test시 발성에서 몇개의 sample을 뽑아낼것인지
-        'num_seg'           : 5,
-        'num_train_frames'  : 4 * 16000, # train에서 input 으로 사용할 frame 개수
+        'test_sample_num'   : 10, # test시 발성에서 몇개의 sample을 뽑아낼것인지
+        'num_seg'           : 10,
+        'num_train_frames'  : 2.56 * 16000 - 120, # train에서 input 으로 사용할 frame 개수
         #'num_test_frames'   : 300,
         
         # learning rate
-        'lr'            : 1e-4,
+        'lr'            : 1e-3,
         'lr_min'        : 1e-6,
 		'weight_decay'  : 1e-5,
         'T_0'           : 80,

@@ -5,14 +5,29 @@ import dataset
 import trainer
 import tester
 from tqdm import trange
+import os
+import wandb
 
 class Main:
     def __init__(self):
         sys_args, exp_args = arguments.get_args()
         
         GPU = sys_args['gpu']
-        
+        self.lr = exp_args['lr']
+        self.embedding_size = exp_args['embedding_size']
         self.max_epoch = exp_args['epoch']
+        self.batch_size = exp_args['batch_size']
+
+        # os.system('wandb login be65d6ddace6bf4e2441a82af03c144eb85bbe65')
+        # wandb.init(project='resnet18-group', entity='dvector')
+        # wandb.config = {
+        #     "learning_rate" : self.lr,
+        #     "epochs" : self.max_epoch,
+        #     "batch_size" : self.batch_size
+        # }
+        # wandb.define_metric("loss")
+        # wandb.define_metric("eer")
+
         
         self.model = ResNet_18(embedding_size=exp_args['embedding_size']).to(GPU)
         
@@ -20,14 +35,15 @@ class Main:
         optimizer = torch.optim.Adam(
             self.model.parameters(),
             lr = exp_args['lr'],
-            weight_decay = exp_args['weight_decay']
+            weight_decay = exp_args['weight_decay'],
+            amsgrad=True,
         )
         
         # learning rate가 epoch마다 0.95%씩 감소하도록 설정
         self.lr_scheduler = torch.optim.lr_scheduler.StepLR(
             optimizer,
             step_size=1,
-            gamma=0.95
+            gamma=0.97
         )
         
         train_dataset = dataset.TrainDataset(annotation_file_path = sys_args['path_train_label'], data_dir = sys_args['path_train'])
