@@ -54,6 +54,13 @@ def get_args():
         'test_sample_num'   : 10, # test시 발성에서 몇개의 sample을 뽑아낼것인지
         'num_seg'           : 10,
         'num_train_frames'  : int(3.2 * 16000)-1, # train에서 input 으로 사용할 frame 개수
+        'sample_rate'       : 16000, # voxceleb1의 기본 sample rate
+        
+        # mel config
+        'n_fft'             : 512,
+        'n_mels'            : 64,
+        'win_length'        : int(25*0.001*16000), 
+        'hop_length'        : int(10*0.001*16000),
         #'num_test_frames'   : 300,
         
         # learning rate

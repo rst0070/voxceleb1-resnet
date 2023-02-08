@@ -3,7 +3,7 @@ import torch.nn as nn
 import torchaudio.transforms as ts
 import arguments
 
-sys_args, _ = arguments.get_args()
+sys_args, exp_args = arguments.get_args()
 GPU = sys_args['gpu']
 
 class Resblock(nn.Module):
@@ -53,12 +53,13 @@ class ResNet_18(nn.Module):
     def __init__(self, embedding_size=512): #embedding_size -> hyperparameter 설정
         super(ResNet_18, self).__init__()
         self.melspec = ts.MelSpectrogram(
-            sample_rate=16000, 
-            n_fft=512, 
-            n_mels=64, 
-            win_length=int(25*0.001*16000), 
-            hop_length=int(10*0.001*16000), 
-            window_fn=torch.hamming_window).to(GPU)
+            sample_rate = exp_args['sample_rate'], 
+            n_fft = exp_args['n_fft'], 
+            n_mels = exp_args['n_mels'], 
+            win_length = exp_args['win_length'], 
+            hop_length = exp_args['hop_length'], 
+            window_fn = torch.hamming_window
+            ).to(GPU)
         
         self.embedding_size = embedding_size
         
@@ -91,28 +92,28 @@ class ResNet_18(nn.Module):
         
     def forward(self, x, is_test = False): # x.size = (32, 1, 4*16000)
         x = x.to(GPU)
-        x = self.melspec(x) # (32, 1, 40, 400)
+        x = self.melspec(x) # (32, 1, 64, 320)
         #print(x.shape)
         x = torch.log(x+1e-5)
         # if x.size(0) == 1:
         #     x = torch.unsqueeze(x, 0)
         # print(x.size())
-        x = self.conv0(x) # (32, 64, 20, 200)
+        x = self.conv0(x) # (32, 64, 32, 160)
         #print(x.size())
 
         x = self.bn1(x)
         x = self.relu(x)
-        x = self.maxpool(x) #(32, 64, 10, 100)
+        x = self.maxpool(x) #(32, 64, 16, 80)
         # print(x.size())
 
 
-        x = self.layer1(x) # (32, 64, 10, 100)
+        x = self.layer1(x) # (32, 64, 8, 40)
         # print(x.size())
-        x = self.layer2(x) # (32, 128, 5, 50)
+        x = self.layer2(x) # (32, 128, 4, 20)
         # print(x.size())
-        x = self.layer3(x) # (32, 256, 3, 25)
+        x = self.layer3(x) # (32, 256, 2, 10)
         # print(x.size())
-        x = self.layer4(x) # (32, 512, 2, 13)
+        x = self.layer4(x) # (32, 512, 1, 5)
         # print(x.size())
         x = self.avgpool(x) # (32, 512, 1, 1)
         # print(x.size())
