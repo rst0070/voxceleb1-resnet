@@ -1,6 +1,8 @@
+# preemphasis
 import torch
 import torch.nn as nn
 import torchaudio.transforms as ts
+import torch.nn.functional as F
 import arguments
 
 sys_args, exp_args = arguments.get_args()
@@ -61,8 +63,13 @@ class ResNet_18(nn.Module):
         
         self.embedding_size = embedding_size
         
+        self.preemphasis = AudioPreEmphasis(0.97)
         self.conv0 = nn.Conv2d(in_channels=1, out_channels=64, kernel_size=7, stride=2, padding=3) 
         self.bn1 = nn.BatchNorm2d(64)
+        self.bn2 = nn.BatchNorm1d(512)
+        self.bn3 = nn.BatchNorm1d(512)
+        self.bn4 = nn.BatchNorm1d(512)
+        self.bn5 = nn.BatchNorm1d(1211)
         self.relu = nn.ReLU()
         self.maxpool = nn.MaxPool2d(kernel_size=3, stride=2, padding=1)
 
@@ -83,12 +90,16 @@ class ResNet_18(nn.Module):
             Resblock(512, 512, 512, False)
         )
         self.avgpool = nn.AdaptiveAvgPool2d((1,1))
-        self.fc1 = nn.Linear(in_features=(512), out_features=self.embedding_size) 
-        self.fc2 = nn.Linear(in_features=self.embedding_size, out_features=1211)
+        self.fc1 = nn.Linear(in_features=512, out_features=512)
+        self.fc2 = nn.Linear(in_features=512, out_features=512)
+        self.fc3 = nn.Linear(in_features=512, out_features=self.embedding_size) 
+        self.fc4 = nn.Linear(in_features=self.embedding_size, out_features=1211)
         
     def forward(self, x, is_test = False): # x.size = (32, 1, 4*16000)
         x = x.to(GPU)
+        x = self.preemphasis(x)
         x = self.melspec(x) # (32, 1, 40, 400)
+        x = torch.log(x+1e-5)
         if x.size(0) == 1:
             x = torch.unsqueeze(x, 0)
         
@@ -107,13 +118,26 @@ class ResNet_18(nn.Module):
         x = x.view(x.size(0), -1) # (32, 512)
 
         
-        x = self.fc1(x) # (32, 256)
+        x = self.relu(self.bn2(self.fc1(x))) # (32, 256)
+        x = self.relu(self.bn3(self.fc2(x)))
+        x = self.relu(self.bn4(self.fc3(x)))
+        x = self.bn5(self.fc4(x))
 
         
         if is_test: # embedding 출력
             return x
         
-        x = self.fc2(x) # prediction 출력 (32, 1211)
 
 
         return x
+
+class AudioPreEmphasis(nn.Module):
+
+    def __init__(self, coeff=0.97):
+        super().__init__()
+
+        self.w = torch.FloatTensor([-coeff, 1.0]).unsqueeze(0).unsqueeze(0)
+
+    def forward(self, audio):
+        audio = F.pad(audio,(1,0), 'reflect')
+        return F.conv1d(audio, self.w.to(audio.device))

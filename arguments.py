@@ -54,7 +54,7 @@ def get_args():
         # data processing
         'test_sample_num'   : 10, # test시 발성에서 몇개의 sample을 뽑아낼것인지
         'num_seg'           : 10,
-        'num_train_frames'  : 2.56 * 16000 - 120, # train에서 input 으로 사용할 frame 개수
+        'num_train_frames'  : int(3.2 * 16000)-1, # train에서 input 으로 사용할 frame 개수
         #'num_test_frames'   : 300,
         
         # learning rate

@@ -103,5 +103,4 @@ class Tester:
         sims = torch.cat(sims, dim = 0)
         labels = torch.cat(labels, dim = 0)
         eer = self.getEER(labels, sims)
-        print(f"epoch: {epoch}, EER: {eer}")
-        # wandb.log({"EER by epoch" : eer})
+        wandb.log({"EER by epoch" : eer})

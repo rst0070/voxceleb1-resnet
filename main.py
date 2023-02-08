@@ -18,15 +18,15 @@ class Main:
         self.max_epoch = exp_args['epoch']
         self.batch_size = exp_args['batch_size']
 
-        # os.system('wandb login be65d6ddace6bf4e2441a82af03c144eb85bbe65')
-        # wandb.init(project='resnet18-group', entity='dvector')
-        # wandb.config = {
-        #     "learning_rate" : self.lr,
-        #     "epochs" : self.max_epoch,
-        #     "batch_size" : self.batch_size
-        # }
-        # wandb.define_metric("loss")
-        # wandb.define_metric("eer")
+        os.system('wandb login be65d6ddace6bf4e2441a82af03c144eb85bbe65')
+        wandb.init(project='resnet18-fc4-preemphasis-0.97', entity='irlab_undgrd')
+        wandb.config = {
+            "learning_rate" : self.lr,
+            "epochs" : self.max_epoch,
+            "batch_size" : self.batch_size
+        }
+        wandb.define_metric("loss")
+        wandb.define_metric("eer")
 
         
         self.model = ResNet_18(embedding_size=exp_args['embedding_size']).to(GPU)
