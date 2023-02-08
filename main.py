@@ -11,6 +11,9 @@ class Main:
     def __init__(self):
         sys_args, exp_args = arguments.get_args()
         
+        if sys_args['wandb_disabled']: # arguments에 wandb 설정확인(wandb loggin 끄는 코드)
+            os.system("wandb disabled")
+            
         os.system(f"wandb login {sys_args['wandb_key']}") # arguments의 sys_args['wandb_key']에 자신의 key 입력 필요
         wandb.init(
             project = sys_args['wandb_project'],

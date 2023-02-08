@@ -40,26 +40,22 @@ class TrainDataset(Dataset):
         super().__init__()
         self.annotation_table = pd.read_csv(annotation_file_path, delim_whitespace = True)
         self.num_utter = len(self.annotation_table)
-        self.cache = []
-
-        for r_idx in trange(self.num_utter, desc="loading train data"):
-            path = os.path.join(data_dir, self.annotation_table.iloc[r_idx, 2])
-            
-            wf, _ = torchaudio.load(path)
-            wf = resizeWaveform(wf)
-            
-            speaker_num = int(self.annotation_table.iloc[r_idx, 0]) - 1           
-            self.cache.append((wf, speaker_num))
+        self.data_dir = data_dir
         
     def __len__(self):
         return self.num_utter
     
     def __getitem__(self, idx):
-        wf, ans = self.cache[idx]
+        path = os.path.join(self.data_dir, self.annotation_table.iloc[idx, 2])
+        wf, _ = torchaudio.load(path)
+        speaker_num = int(self.annotation_table.iloc[idx, 0]) - 1 # 0부터 1210까지 번호가 매겨진 화자들
+        
+        wf = resizeWaveform(wf)
+        
         _, n_fr = wf.shape
         
         start_fr = random.randint(0, n_fr - NUM_FRAME_PER_INPUT)
-        return wf[:, start_fr : start_fr + NUM_FRAME_PER_INPUT], ans
+        return wf[:, start_fr : start_fr + NUM_FRAME_PER_INPUT], speaker_num
     
 class TestDataset(Dataset):
     """_summary_
