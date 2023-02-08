@@ -11,10 +11,10 @@ class Main:
     def __init__(self):
         sys_args, exp_args = arguments.get_args()
         
-        WANDB_KEY = "7c6c025691da1f01124a2b61a50c7c2932f0fb85"
-        os.system(f"wandb login {WANDB_KEY}")
+        os.system(f"wandb login {sys_args['wandb_key']}") # arguments의 sys_args['wandb_key']에 자신의 key 입력 필요
         wandb.init(
-            project = "Voxceleb1 resnet18",
+            project = sys_args['wandb_project'],
+            entity = sys_args['wandb_entity'],
             name = "baseline"
         )
         

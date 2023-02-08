@@ -1,5 +1,3 @@
-import os
-import itertools
 import torch
 
 def get_args():
@@ -19,8 +17,10 @@ def get_args():
 	    # log
         'path_save' : '/result.pth', # 모델을 저장할 위치
 	    'path_log'      : '/results',
+        'wandb_key'     : 'YOUR WANDB KEY',
+        'wandb_project' : 'Voxceleb1 resnet18',
 	    'wandb_group'   : '',
-	    'wandb_entity'  : '',
+	    'wandb_entity'  : 'irlab_undgrd',
 
         # dataset
         'path_train_label'  :   'labels/train_label.csv',
