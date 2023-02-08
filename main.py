@@ -18,7 +18,7 @@ class Main:
         wandb.init(
             project = sys_args['wandb_project'],
             entity = sys_args['wandb_entity'],
-            name = "baseline"
+            name = sys_args['wandb_name']
         )
         
         

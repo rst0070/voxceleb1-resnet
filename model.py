@@ -57,7 +57,9 @@ class ResNet_18(nn.Module):
             n_fft = exp_args['n_fft'], 
             n_mels = exp_args['n_mels'], 
             win_length = exp_args['win_length'], 
-            hop_length = exp_args['hop_length'], 
+            hop_length = exp_args['hop_length'],
+            f_min = exp_args['f_min'],
+            f_max = exp_args['f_max'], 
             window_fn = torch.hamming_window
             ).to(GPU)
         
@@ -85,9 +87,28 @@ class ResNet_18(nn.Module):
             Resblock(512, 512, 512, False)
         )
         self.avgpool = nn.AdaptiveAvgPool2d((1,1))
-        self.fc1 = nn.Linear(in_features=512, out_features=512)
-        self.fc2 = nn.Linear(in_features=512, out_features=512)
-        self.fc3 = nn.Linear(in_features=512, out_features=self.embedding_size) 
+        
+        # self.fc1 = nn.Sequential(
+        #     nn.Linear(in_features=512, out_features=512),
+        #     nn.Dropout(0.25),
+        #     nn.BatchNorm1d(512),
+        #     self.relu
+        # )
+        
+        # self.fc2 = nn.Sequential(
+        #     nn.Linear(in_features=512, out_features=512),
+        #     nn.Dropout(0.25),
+        #     nn.BatchNorm1d(512),
+        #     self.relu
+        # )
+        
+        self.fc3 = nn.Sequential(
+            nn.Linear(in_features=512, out_features=self.embedding_size),
+            nn.Dropout(0.25),
+            nn.BatchNorm1d(self.embedding_size),
+            self.relu
+        )
+         
         self.fc4 = nn.Linear(in_features=self.embedding_size, out_features=1211)
         
     def forward(self, x, is_test = False): # x.size = (32, 1, 4*16000)
@@ -120,11 +141,12 @@ class ResNet_18(nn.Module):
         x = x.view(x.size(0), -1) # (32, 512)
         # print(x.size())
         
-        x = self.fc1(x) # (32, 256)
-        # print(x.size())
-        x = self.fc2(x)
+        # x = self.fc1(x) # (32, 256)
+        
+        # x = self.fc2(x)
+        
         x = self.fc3(x)
-
+        
         if is_test: # embedding 출력
             return x
         
