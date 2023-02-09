@@ -17,9 +17,9 @@ def get_args():
 	    # log
         'path_save' : '/result.pth', # 모델을 저장할 위치
 	    'path_log'      : '/results',
-        'wandb_disabled': True,
+        'wandb_disabled': False,
         'wandb_key'     : 'be65d6ddace6bf4e2441a82af03c144eb85bbe65',
-        'wandb_project' : 'Voxceleb1 resnet18',
+        'wandb_project' : 'resnet18-fc4-preemphasis-0.97',
 	    'wandb_group'   : '',
 	    'wandb_entity'  : 'irlab_undgrd',
 
@@ -31,7 +31,7 @@ def get_args():
 
         # processor
         'cpu'           : "cpu",
-        'gpu'           : ("cuda" if torch.cuda.is_available() else "mps" if torch.backends.mps.is_available() else "cpu"),
+        'gpu'           : ("cuda:1" if torch.cuda.is_available() else "mps" if torch.backends.mps.is_available() else "cpu"),
         
         # others
         'num_workers': 4,
