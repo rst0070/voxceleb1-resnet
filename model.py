@@ -121,13 +121,11 @@ class ResNet_18(nn.Module):
         x = self.relu(self.bn2(self.fc1(x))) # (32, 256)
         x = self.relu(self.bn3(self.fc2(x)))
         x = self.relu(self.bn4(self.fc3(x)))
-        x = self.bn5(self.fc4(x))
-
         
         if is_test: # embedding 출력
             return x
         
-
+        x = self.bn5(self.fc4(x))
 
         return x
 
