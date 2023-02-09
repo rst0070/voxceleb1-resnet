@@ -4,7 +4,6 @@ import torch
 import dataset
 import trainer
 import tester
-from tqdm import trange
 import os
 import wandb
 
@@ -12,22 +11,20 @@ class Main:
     def __init__(self):
         sys_args, exp_args = arguments.get_args()
         
+        if sys_args['wandb_disabled']: # arguments에 wandb 설정확인(wandb loggin 끄는 코드)
+            os.system("wandb disabled")
+            
+        os.system(f"wandb login {sys_args['wandb_key']}") # arguments의 sys_args['wandb_key']에 자신의 key 입력 필요
+        wandb.init(
+            project = sys_args['wandb_project'],
+            entity = sys_args['wandb_entity'],
+            name = "baseline"
+        )
+        
+        
         GPU = sys_args['gpu']
-        self.lr = exp_args['lr']
-        self.embedding_size = exp_args['embedding_size']
+        
         self.max_epoch = exp_args['epoch']
-        self.batch_size = exp_args['batch_size']
-
-        os.system('wandb login be65d6ddace6bf4e2441a82af03c144eb85bbe65')
-        wandb.init(project='resnet18-fc4-preemphasis-0.97', entity='irlab_undgrd')
-        wandb.config = {
-            "learning_rate" : self.lr,
-            "epochs" : self.max_epoch,
-            "batch_size" : self.batch_size
-        }
-        wandb.define_metric("loss")
-        wandb.define_metric("eer")
-
         
         self.model = ResNet_18(embedding_size=exp_args['embedding_size']).to(GPU)
         
@@ -35,8 +32,7 @@ class Main:
         optimizer = torch.optim.Adam(
             self.model.parameters(),
             lr = exp_args['lr'],
-            weight_decay = exp_args['weight_decay'],
-            amsgrad=True,
+            weight_decay = exp_args['weight_decay']
         )
         
         # learning rate가 epoch마다 0.95%씩 감소하도록 설정

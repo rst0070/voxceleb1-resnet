@@ -1,5 +1,3 @@
-import os
-import itertools
 import torch
 
 def get_args():
@@ -19,8 +17,11 @@ def get_args():
 	    # log
         'path_save' : '/result.pth', # 모델을 저장할 위치
 	    'path_log'      : '/results',
+        'wandb_disabled': True,
+        'wandb_key'     : 'be65d6ddace6bf4e2441a82af03c144eb85bbe65',
+        'wandb_project' : 'Voxceleb1 resnet18',
 	    'wandb_group'   : '',
-	    'wandb_entity'  : '',
+	    'wandb_entity'  : 'irlab_undgrd',
 
         # dataset
         'path_train_label'  :   'labels/train_label.csv',
@@ -30,17 +31,17 @@ def get_args():
 
         # processor
         'cpu'           : "cpu",
-        'gpu'           : ("cuda:1" if torch.cuda.is_available() else "mps" if torch.backends.mps.is_available() else "cpu"),
+        'gpu'           : ("cuda" if torch.cuda.is_available() else "mps" if torch.backends.mps.is_available() else "cpu"),
         
         # others
-        'num_workers': 0,
+        'num_workers': 4,
 	    'usable_gpu': None,
     }
 
     experiment_args = {
         # experiment
         'epoch'             : 100,
-        'batch_size'        : 32,
+        'batch_size'        : 64,
 		'rand_seed'		    : 1,
         
         # model
@@ -49,12 +50,18 @@ def get_args():
         'aam_scale'         : 20,
         'spec_mask_F'       : 100,
         'spec_mask_T'       : 10,
-        'n_mels'            : 64,
 
         # data processing
         'test_sample_num'   : 10, # test시 발성에서 몇개의 sample을 뽑아낼것인지
         'num_seg'           : 10,
         'num_train_frames'  : int(3.2 * 16000)-1, # train에서 input 으로 사용할 frame 개수
+        'sample_rate'       : 16000, # voxceleb1의 기본 sample rate
+        
+        # mel config
+        'n_fft'             : 512,
+        'n_mels'            : 64,
+        'win_length'        : int(25*0.001*16000), 
+        'hop_length'        : int(10*0.001*16000),
         #'num_test_frames'   : 300,
         
         # learning rate

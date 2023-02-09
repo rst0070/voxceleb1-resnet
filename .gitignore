@@ -1,2 +1,4 @@
 wandb/
+.vscode**
+tmp/
 __pycache__/
