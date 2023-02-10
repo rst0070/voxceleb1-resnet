@@ -103,22 +103,22 @@ class ResNet_18(nn.Module):
         if x.size(0) == 1:
             x = torch.unsqueeze(x, 0)
         
-        x = self.conv0(x) # (32, 64, 20, 200)
+        x = self.conv0(x) # 
 
         x = self.bn1(x)
         x = self.relu(x)
-        x = self.maxpool(x) #(32, 64, 10, 100)
-        x = self.layer1(x) # (32, 64, 10, 100)
-        x = self.layer2(x) # (32, 128, 5, 50)
-        x = self.layer3(x) # (32, 256, 3, 25)
-        x = self.layer4(x) # (32, 512, 2, 13)
+        x = self.maxpool(x) #
+        x = self.layer1(x) # 
+        x = self.layer2(x) # 
+        x = self.layer3(x) # 
+        x = self.layer4(x) # 
 
-        x = self.avgpool(x) # (32, 512, 1, 1)
+        x = self.avgpool(x) # 
         
-        x = x.view(x.size(0), -1) # (32, 512)
+        x = x.view(x.size(0), -1) # 
 
         
-        x = self.relu(self.bn2(self.fc1(x))) # (32, 256)
+        x = self.relu(self.bn2(self.fc1(x))) #
         x = self.relu(self.bn3(self.fc2(x)))
         x = self.relu(self.bn4(self.fc3(x)))
         
