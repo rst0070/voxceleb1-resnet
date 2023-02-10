@@ -45,7 +45,7 @@ def get_args():
 		'rand_seed'		    : 1,
         
         # model
-		'embedding_size'	: 512,
+		'embedding_size'	: 256,
         'aam_margin'        : 0.15,
         'aam_scale'         : 20,
         'spec_mask_F'       : 100,

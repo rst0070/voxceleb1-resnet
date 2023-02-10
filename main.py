@@ -49,14 +49,18 @@ class Main:
         self.tester = tester.Tester(model = self.model, dataset = test_dataset, batch_size=exp_args['batch_size'])
         
     def start(self):
-        
+        best_eer = 99
         for epoch in range(1, self.max_epoch + 1):
             
             self.trainer.train()
             
-            self.tester.test(epoch = epoch)
+            eer = self.tester.test(epoch = epoch)
             
             self.lr_scheduler.step()
+
+            if eer <= best_eer:
+                best_eer = eer
+                wandb.log({"best eer" : best_eer*100})
             
     def save(self):
         sys_args, exp_args = arguments.get_args()
