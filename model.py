@@ -4,8 +4,11 @@ import torch.nn as nn
 import torchaudio.transforms as ts
 import torch.nn.functional as F
 import arguments
+import wandb
+import matplotlib.pyplot as plt
 
 sys_args, exp_args = arguments.get_args()
+CPU = sys_args['cpu']
 GPU = sys_args['gpu']
 
 class Resblock(nn.Module):
@@ -69,10 +72,8 @@ class ResNet_18(nn.Module):
         self.preemphasis = AudioPreEmphasis(0.97)
         self.conv0 = nn.Conv2d(in_channels=1, out_channels=64, kernel_size=7, stride=2, padding=3) 
         self.bn1 = nn.BatchNorm2d(64)
-        self.bn2 = nn.BatchNorm1d(512)
-        self.bn3 = nn.BatchNorm1d(256)
-        self.bn4 = nn.BatchNorm1d(self.embedding_size)
-        self.bn5 = nn.BatchNorm1d(1211)
+        
+        
         self.relu = nn.ReLU()
         self.maxpool = nn.MaxPool2d(kernel_size=3, stride=1, padding=1)
 
@@ -93,16 +94,21 @@ class ResNet_18(nn.Module):
             Resblock(512, 512, 512, False)
         )
         self.avgpool = nn.AdaptiveAvgPool2d((1,1))
-        self.fc1 = nn.Linear(in_features=512, out_features=512)
-        self.fc2 = nn.Linear(in_features=512, out_features=256)
-        self.fc3 = nn.Linear(in_features=256, out_features=self.embedding_size) 
-        self.fc4 = nn.Linear(in_features=self.embedding_size, out_features=1211)
+        
+        self.fc1 = nn.Linear(in_features=512, out_features=256)
+        self.bn2 = nn.BatchNorm1d(256)
+        
+        self.fc2 = nn.Linear(in_features=256, out_features=self.embedding_size)
+        self.bn3 = nn.BatchNorm1d(self.embedding_size)
+        
+        self.fc3 =  nn.Linear(in_features=self.embedding_size, out_features=1211)
+        self.bn4 = nn.BatchNorm1d(1211)
         
     def forward(self, x, is_test = False): # x.size = (32, 1, 4*16000)
         x = x.to(GPU)
         x = self.preemphasis(x)
         x = self.melspec(x) # (32, 1, 64, 320)
-        x = torch.log(x+1e-5)
+        x = torch.log(x+1e-5)        
         if x.size(0) == 1:
             x = torch.unsqueeze(x, 0)
         x = self.conv0(x) # 
@@ -121,13 +127,14 @@ class ResNet_18(nn.Module):
 
         
         x = self.relu(self.bn2(self.fc1(x))) #
-        x = self.relu(self.bn3(self.fc2(x)))
-        x = self.relu(self.bn4(self.fc3(x)))
+        x = self.relu(self.bn3(self.fc2(x))) # [batch, embedding_size]
+        
+        x = F.normalize(x, dim = 1, p=2.)
         
         if is_test: # embedding 출력
             return x
         
-        x = self.bn5(self.fc4(x))
+        x = self.fc3(x)
 
         return x
 
