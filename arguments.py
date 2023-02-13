@@ -17,11 +17,13 @@ def get_args():
 	    # log
         'path_save' : '/result.pth', # 모델을 저장할 위치
 	    'path_log'      : '/results',
-        'wandb_disabled': True,
-        'wandb_key'     : 'YOUR WANDB KEY',
+        'wandb_disabled': False,
+        'wandb_key'     : '6ef86c7e660c02088ca226a60f3e1073b3f78876',
         'wandb_project' : 'Voxceleb1 resnet18',
 	    'wandb_group'   : '',
+        'wandb_name'    : 'baseline',
 	    'wandb_entity'  : 'irlab_undgrd',
+        'wandb_notes'   : '',
 
         # dataset
         'path_train_label'  :   'labels/train_label.csv',
@@ -45,7 +47,7 @@ def get_args():
 		'rand_seed'		    : 1,
         
         # model
-		'embedding_size'	: 512,
+		'embedding_size'	: 256,
         'aam_margin'        : 0.15,
         'aam_scale'         : 20,
         'spec_mask_F'       : 100,
@@ -62,6 +64,8 @@ def get_args():
         'n_mels'            : 64,
         'win_length'        : int(25*0.001*16000), 
         'hop_length'        : int(10*0.001*16000),
+        'f_min'             : int(100),
+        'f_max'             : int(8000),
         #'num_test_frames'   : 300,
         
         # learning rate

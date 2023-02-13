@@ -29,6 +29,7 @@ class Tester:
         self.model = model
         self.dataset = dataset
         self.loader = DataLoader(dataset, batch_size=batch_size, shuffle=False, num_workers=0)
+        self.best_eer = 100.
         
     def prepareEmbedding(self):
         data_dict = self.dataset.getAllFeature()
@@ -99,8 +100,14 @@ class Tester:
             #print(sim)
             sims.append(sim)
             labels.append(label)
+        
         sims = torch.concat(sims, dim = 0)
         labels = torch.concat(labels, dim = 0)
         eer = self.getEER(labels, sims)
+        
+        if eer < self.best_eer:
+            self.best_eer = eer
+            wandb.log({"best_eer" : self.best_eer * 100.})
+            
         print(f"epoch: {epoch}, EER: {eer}")
-        wandb.log({"EER by epoch" : eer})
+        wandb.log({"EER by epoch" : (eer * 100.)})

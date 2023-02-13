@@ -23,8 +23,12 @@ class Trainer():
 
     def train(self):
         self.model.train()
+        
+        itered = 0
+        loss_sum = 0
+        
         for X, y in tqdm(self.dataloader, desc = "training"):
-            
+            itered = itered + 1
             self.optimizer.zero_grad()
             
             X = X.to(GPU)
@@ -32,7 +36,16 @@ class Trainer():
             
             pred = self.model(X, is_test = False)
             loss = self.loss_function(pred,y)
+            loss_sum += loss
             
             loss.backward()
             self.optimizer.step()
-            wandb.log({'Loss by batch':loss})
+            
+            if itered == 50:
+                wandb.log({'Loss':loss_sum / float(itered)})
+                itered = 0
+                loss_sum = 0
+                
+        wandb.log({'Loss':loss_sum / float(itered)})
+                
+                

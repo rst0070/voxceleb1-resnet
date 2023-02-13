@@ -6,10 +6,22 @@ import trainer
 import tester
 import os
 import wandb
+import random
+import torch.backends.cudnn as cudnn
+import numpy as np
 
 class Main:
     def __init__(self):
         sys_args, exp_args = arguments.get_args()
+        
+        # seed 설정
+        torch.manual_seed(0)
+        torch.cuda.manual_seed(0)
+        torch.cuda.manual_seed_all(0)
+        np.random.seed(0)
+        cudnn.benchmark = False
+        cudnn.deterministic = True
+        random.seed(0)
         
         if sys_args['wandb_disabled']: # arguments에 wandb 설정확인(wandb loggin 끄는 코드)
             os.system("wandb disabled")
