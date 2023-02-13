@@ -6,6 +6,9 @@ import trainer
 import tester
 import os
 import wandb
+import random
+import torch.backends.cudnn as cudnn
+import numpy as np
 
 class Main:
     def __init__(self):
@@ -27,6 +30,15 @@ class Main:
         self.max_epoch = exp_args['epoch']
         
         self.model = ResNet_18(embedding_size=exp_args['embedding_size']).to(GPU)
+
+        # seed 고정
+        torch.manual_seed(0)
+        torch.cuda.manual_seed(0)
+        torch.cuda.manual_seed_all(0)
+        np.random.seed(0)
+        cudnn.benchmark = False
+        cudnn.deterministic = True
+        random.seed(0)
         
         # optimizer 정의
         optimizer = torch.optim.Adam(
@@ -57,6 +69,8 @@ class Main:
             eer = self.tester.test(epoch = epoch)
             
             self.lr_scheduler.step()
+
+            wandb.log({'epoch': epoch})
 
             if eer <= best_eer:
                 best_eer = eer

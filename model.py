@@ -26,12 +26,16 @@ class Resblock(nn.Module):
         self.bn2 = nn.BatchNorm2d(self.out_ch)
         
         self.conv_ps = nn.Conv2d(in_channels=self.in_ch, out_channels=self.out_ch, kernel_size=(2,2), stride=2)
+        # 아래는 ps에서 maxpool적용
+        # self.conv_ps = nn.Conv2d(in_channels=self.in_ch, out_channels=self.out_ch,kernel_size=(1,1))
+        self.maxpool_ps = nn.MaxPool2d(kernel_size=2, stride=2, padding=0)
         self.bn_ps = nn.BatchNorm2d(self.out_ch)
 
     def forward(self, x):
         if self.ps:
-            # print('original x:',x.shape)
-            a = self.conv1_ps(x)
+            a = self.conv_ps(x)
+            # 아래는 ps에서 maxpool적용
+            # a = self.maxpool_ps(a)
         else:
             a = self.conv1(x)
             
@@ -42,6 +46,8 @@ class Resblock(nn.Module):
 
         if self.ps:
             x = self.conv_ps(x)
+            # 아래는 ps에서 maxpool적용
+            # x = self.maxpool_ps(x)
             x = self.bn_ps(x)
         x = x + a
 
@@ -71,7 +77,7 @@ class ResNet_18(nn.Module):
         self.bn4 = nn.BatchNorm1d(self.embedding_size)
         self.bn5 = nn.BatchNorm1d(1211)
         self.relu = nn.ReLU()
-        self.maxpool = nn.MaxPool2d(kernel_size=3, stride=2, padding=1)
+        self.maxpool = nn.MaxPool2d(kernel_size=3, stride=1, padding=1)
 
         self.layer1 = nn.Sequential(
             Resblock(64, 64, 64, False),
@@ -98,11 +104,10 @@ class ResNet_18(nn.Module):
     def forward(self, x, is_test = False): # x.size = (32, 1, 4*16000)
         x = x.to(GPU)
         x = self.preemphasis(x)
-        x = self.melspec(x) # (32, 1, 40, 400)
+        x = self.melspec(x) # (32, 1, 64, 320)
         x = torch.log(x+1e-5)
         if x.size(0) == 1:
             x = torch.unsqueeze(x, 0)
-        
         x = self.conv0(x) # 
 
         x = self.bn1(x)

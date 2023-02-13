@@ -18,7 +18,10 @@ class Trainer():
         self.model = model
         self.dataset = dataset
         self.dataloader = DataLoader(dataset, batch_size=batch_size, shuffle=True, num_workers = NUM_WORKERS)
+        # 아래는 single class classification
         self.loss_function = nn.CrossEntropyLoss().to(GPU)
+        # 아래는 multi label classification
+        # self.loss_function = nn.MultiLabelSoftMarginLoss().to(GPU)
         self.optimizer = optimizer
 
     def train(self):
