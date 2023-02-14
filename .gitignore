@@ -1,2 +1,3 @@
 .vscode**
-**__pychach__**
+**__pycache__**
+**wandb**
