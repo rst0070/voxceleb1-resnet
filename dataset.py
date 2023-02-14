@@ -6,10 +6,12 @@ import pandas as pd
 from tqdm import trange
 import arguments
 import random
+import torch.nn.functional as F
+
 
 _, exp_args = arguments.get_args()
 
-#NUM_TRAIN_SPEAKER = 1211
+NUM_TRAIN_SPEAKER = 1211
 NUM_FRAME_PER_INPUT = int(exp_args['num_train_frames'])
 
 def resizeWaveform(waveform:torch.Tensor):
@@ -41,6 +43,7 @@ class TrainDataset(Dataset):
         self.annotation_table = pd.read_csv(annotation_file_path, delim_whitespace = True)
         self.num_utter = len(self.annotation_table)
         self.data_dir = data_dir
+        self.isMultiLabel = False
         
     def __len__(self):
         return self.num_utter
@@ -49,13 +52,28 @@ class TrainDataset(Dataset):
         path = os.path.join(self.data_dir, self.annotation_table.iloc[idx, 2])
         wf, _ = torchaudio.load(path)
         speaker_num = int(self.annotation_table.iloc[idx, 0]) - 1 # 0부터 1210까지 번호가 매겨진 화자들
-        
         wf = resizeWaveform(wf)
-        
         _, n_fr = wf.shape
-        
         start_fr = random.randint(0, n_fr - NUM_FRAME_PER_INPUT)
-        return wf[:, start_fr : start_fr + NUM_FRAME_PER_INPUT], speaker_num
+        output = wf[:, start_fr : start_fr + NUM_FRAME_PER_INPUT]
+
+        if self.isMultiLabel:
+            speaker_num = F.one_hot(torch.tensor(speaker_num),num_classes=NUM_TRAIN_SPEAKER)
+            if random.randint(0,1) == 0:
+                spk_rnd = random.randint(0,len(self.annotation_table)-1)
+                path2 = os.path.join(self.data_dir, self.annotation_table.iloc[spk_rnd,2])
+                wf2, _ = torchaudio.load(path2)
+                speaker_num2 = int(self.annotation_table.iloc[spk_rnd,0]) - 1
+                speaker_num2 = F.one_hot(torch.tensor(speaker_num2),num_classes=NUM_TRAIN_SPEAKER)
+                wf2 = resizeWaveform(wf2)
+                _, n_fr2 = wf2.shape
+                start_fr2 = random.randint(0, n_fr2 - NUM_FRAME_PER_INPUT)
+                output += wf2[:, start_fr2 : start_fr2 + NUM_FRAME_PER_INPUT]
+                speaker_num = speaker_num | speaker_num2
+        return output, speaker_num
+    
+    def changeIntoMultiLabel(self,yes):
+        self.isMultiLabel = yes
     
 class TestDataset(Dataset):
     """_summary_

@@ -100,6 +100,8 @@ class ResNet_18(nn.Module):
         self.fc2 = nn.Linear(in_features=512, out_features=256)
         self.fc3 = nn.Linear(in_features=256, out_features=self.embedding_size) 
         self.fc4 = nn.Linear(in_features=self.embedding_size, out_features=1211)
+        self.softmax = nn.Softmax(dim=1)
+        self.sigmoid = nn.Sigmoid()
         
     def forward(self, x, is_test = False): # x.size = (32, 1, 4*16000)
         x = x.to(GPU)

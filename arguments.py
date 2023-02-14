@@ -15,8 +15,8 @@ def get_args():
 	    'description'   : '~~기준, 뭐가 바뀌었는지 작성',
 
 	    # log
-        'path_save' : '/result.pth', # 모델을 저장할 위치
-	    'path_log'      : '/results',
+        'path_save' : './', # 모델을 저장할 위치
+	    'path_log'      : './results',
         'wandb_disabled': False,
         'wandb_key'     : 'be65d6ddace6bf4e2441a82af03c144eb85bbe65',
         'wandb_project' : 'resnet18-fc4-preemphasis-0.97',
@@ -40,7 +40,7 @@ def get_args():
 
     experiment_args = {
         # experiment
-        'epoch'             : 100,
+        'epoch'             : 50,
         'batch_size'        : 64,
 		'rand_seed'		    : 1,
         
