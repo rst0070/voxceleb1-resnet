@@ -17,11 +17,11 @@ def get_args():
 	    # log
         'path_save' : '/result.pth', # 모델을 저장할 위치
 	    'path_log'      : '/results',
-        'wandb_disabled': False,
+        'wandb_disabled': True,
         'wandb_key'     : '6ef86c7e660c02088ca226a60f3e1073b3f78876',
         'wandb_project' : 'Voxceleb1 resnet18',
 	    'wandb_group'   : '',
-        'wandb_name'    : 'normalizing embedding',
+        'wandb_name'    : 'separate downsampling',
 	    'wandb_entity'  : 'irlab_undgrd',
         'wandb_notes'   : '',
 
