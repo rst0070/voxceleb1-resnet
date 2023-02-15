@@ -22,7 +22,7 @@ class Main:
         wandb.init(
             project = self.sys_args['wandb_project'],
             entity = self.sys_args['wandb_entity'],
-            name = "multilabel-random-baseline-epoch50-v3"
+            name = "multilabel-25percent"
         )
         
         
@@ -97,10 +97,10 @@ class Main:
             if eer <= best_eer:
                 best_eer = eer
                 wandb.log({"best eer" : best_eer*100})
-            if epoch % 10 == 0:
-                self.save(epoch,'multilabel-finetuned')
+            if epoch % 20 == 0:
+                self.save(epoch,'multilabel-finetuned-v3')
 
-        self.save(epoch,'multilabel-finetuned')
+        self.save(epoch,'multilabel-finetuned-v3')
 
             
     def save(self,epoch,desc):
@@ -114,13 +114,13 @@ class Main:
             if ct < 16:
                 for param in child.parameters():
                     param.requires_grad = False
-        self.train_dataset.changeIntoMultiLabel(True)
+        self.train_dataset.changeIntoMultiLabel(False)
         best_eer = 99
-        pre_epoch = 50
+        pre_epoch = 140
         for epoch in range(1, 80 + 1):
             epoch = pre_epoch + epoch
 
-            self.trainer.train(multilabel=True)
+            self.trainer.train(multilabel=False)
             
             eer = self.tester.test(epoch = epoch)
             
@@ -139,5 +139,5 @@ if __name__ == '__main__':
     #torch.multiprocessing.set_start_method("spawn")
     program = Main()
     program.start()
-    # program.restart('multilabel-130')
+    # program.restart('baseline50.pt')
     

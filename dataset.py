@@ -59,7 +59,7 @@ class TrainDataset(Dataset):
 
         if self.isMultiLabel:
             speaker_num = F.one_hot(torch.tensor(speaker_num),num_classes=NUM_TRAIN_SPEAKER)
-            if random.randint(0,1) == 0:
+            if random.randint(0,4) == 0:
                 spk_rnd = random.randint(0,len(self.annotation_table)-1)
                 path2 = os.path.join(self.data_dir, self.annotation_table.iloc[spk_rnd,2])
                 wf2, _ = torchaudio.load(path2)
