@@ -17,9 +17,9 @@ def get_args():
 	    # log
         'path_save' : '/result.pth', # 모델을 저장할 위치
 	    'path_log'      : '/results',
-        'wandb_disabled': True,
-        'wandb_key'     : '6ef86c7e660c02088ca226a60f3e1073b3f78876',
-        'wandb_project' : 'Voxceleb1 resnet18',
+        'wandb_disabled': False,
+        'wandb_key'     : '029f70f728310335e4824743783a5ae2ee3bcd21',
+        'wandb_project' : 'model change',
 	    'wandb_group'   : '',
         'wandb_name'    : 'separate downsampling',
 	    'wandb_entity'  : 'irlab_undgrd',

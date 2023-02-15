@@ -27,7 +27,8 @@ class Trainer():
         itered = 0
         loss_sum = 0
         
-        for X, y in tqdm(self.dataloader, desc = "training"):
+        pbar = tqdm(self.dataloader)
+        for X, y in pbar:
             itered = itered + 1
             self.optimizer.zero_grad()
             
@@ -36,6 +37,8 @@ class Trainer():
             
             pred = self.model(X, is_test = False)
             loss = self.loss_function(pred,y)
+            pbar.set_description(f"training loss: {loss}")
+            
             loss_sum += loss
             
             loss.backward()
@@ -46,6 +49,7 @@ class Trainer():
                 itered = 0
                 loss_sum = 0
                 
-        wandb.log({'Loss':loss_sum / float(itered)})
-                
+        mean =  loss_sum / float(itered)       
+        wandb.log({'Loss': mean})
+        print(f"loss mean: {mean}")        
                 

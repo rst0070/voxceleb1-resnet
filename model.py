@@ -4,8 +4,6 @@ import torch.nn as nn
 import torchaudio.transforms as ts
 import torch.nn.functional as F
 import arguments
-import wandb
-import matplotlib.pyplot as plt
 
 sys_args, exp_args = arguments.get_args()
 CPU = sys_args['cpu']
@@ -82,7 +80,7 @@ class ResNet_18(nn.Module):
         self.bn1 = nn.BatchNorm2d(32)
         self.relu = nn.ReLU()
         
-        self.maxpool = nn.MaxPool2d(kernel_size=3, stride=1, padding=1)
+        self.maxpool = nn.MaxPool2d(kernel_size=3, stride=2, padding=1)
 
         self.layer1 = nn.Sequential(
             Resblock(32, 32, 32, False),
@@ -117,14 +115,18 @@ class ResNet_18(nn.Module):
         #     nn.BatchNorm2d(512),
         #     self.relu,
         # )
-        self.avgpool = nn.AdaptiveAvgPool2d((1,1))
+        self.avgpool = nn.AdaptiveAvgPool2d((2,2))
         
-        self.fc1 = nn.Linear(in_features=256, out_features=self.embedding_size)
+        self.fc1 = nn.Linear(in_features=1024, out_features=self.embedding_size)
         self.bn2 = nn.BatchNorm1d(self.embedding_size)
-        self.leaky_relu = nn.LeakyReLU()
         
-        self.fc2 = nn.Linear(in_features=self.embedding_size, out_features=1211)
-        self.bn3 = nn.BatchNorm1d(1211)
+        
+        self.fc2 = nn.Linear(in_features=self.embedding_size, out_features=self.embedding_size)
+        self.bn3 = nn.BatchNorm1d(self.embedding_size)
+        #self.leaky_relu = nn.LeakyReLU()
+        
+        self.fc3 = nn.Linear(in_features=self.embedding_size, out_features=1211)
+        self.bn4 = nn.BatchNorm1d(1211)
         
     def forward(self, x, is_test = False): # x.size = (32, 1, 4*16000)
         x = x.to(GPU)
@@ -146,14 +148,14 @@ class ResNet_18(nn.Module):
         
         x = x.view(x.size(0), -1) # 
 
-        
-        x = self.leaky_relu(self.bn2(self.fc1(x))) #        
+        x = self.relu(self.bn2(self.fc1(x)))
+        x = self.bn3(self.fc2(x)) #        
         # x = F.normalize(x, dim = 1, p=2.)
         
         if is_test: # embedding 출력
             return x
         
-        x = self.bn3(self.fc2(x))
+        x = self.bn4(self.fc3(x))
 
         return x
 
@@ -167,3 +169,10 @@ class AudioPreEmphasis(nn.Module):
     def forward(self, audio):
         audio = F.pad(audio,(1,0), 'reflect')
         return F.conv1d(audio, self.w.to(audio.device))
+    
+    
+if __name__ == '__main__':
+    from torchsummary import summary
+    
+    model = ResNet_18().cuda()
+    summary(model, input_size=(1,int(16000*3.2)))
