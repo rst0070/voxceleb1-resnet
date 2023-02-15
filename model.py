@@ -16,24 +16,21 @@ class Resblock(nn.Module):
         self.out_ch = out_ch
         self.ps = ps
 
-        self.conv1_ps = nn.Conv2d(in_channels=self.in_ch, out_channels=self.hid_ch, kernel_size=(3,3), stride=2, padding=1)
-        self.conv1 = nn.Conv2d(in_channels=self.in_ch, out_channels=self.hid_ch, kernel_size=(3,3), stride=1, padding=1)
-        self.conv2 = nn.Conv2d(in_channels=self.hid_ch, out_channels=self.out_ch, kernel_size=(3,3), stride=1, padding=1)
+        self.conv1_ps = nn.Conv1d(in_channels=self.in_ch, out_channels=self.hid_ch, kernel_size=3, stride=2, padding=1)
+        self.conv1 = nn.Conv1d(in_channels=self.in_ch, out_channels=self.hid_ch, kernel_size=3, stride=1, padding=1)
+        self.conv2 = nn.Conv1d(in_channels=self.hid_ch, out_channels=self.out_ch, kernel_size=3, stride=1, padding=1)
 
         self.relu = nn.ReLU()
         
-        self.bn1 = nn.BatchNorm2d(self.hid_ch)
-        self.bn2 = nn.BatchNorm2d(self.out_ch)
+        self.bn1 = nn.BatchNorm1d(self.hid_ch)
+        self.bn2 = nn.BatchNorm1d(self.out_ch)
         
-        self.conv_ps = nn.Conv2d(in_channels=self.in_ch, out_channels=self.out_ch, kernel_size=(2,2), stride=2)
-        # self.conv_ps = nn.Conv2d(in_channels=self.in_ch, out_channels=self.out_ch,kernel_size=(1,1))
-        self.maxpool_ps = nn.MaxPool2d(kernel_size=2, stride=2, padding=0)
-        self.bn_ps = nn.BatchNorm2d(self.out_ch)
+        self.conv_ps = nn.Conv1d(in_channels=self.in_ch, out_channels=self.out_ch, kernel_size=2, stride=2)
+        self.bn_ps = nn.BatchNorm1d(self.out_ch)
 
     def forward(self, x):
         if self.ps:
             a = self.conv_ps(x)
-            # a = self.maxpool_ps(a)
         else:
             a = self.conv1(x)
             
@@ -44,7 +41,6 @@ class Resblock(nn.Module):
 
         if self.ps:
             x = self.conv_ps(x)
-            # x = self.maxpool_ps(x)
             x = self.bn_ps(x)
         x = x + a
 
@@ -56,25 +52,18 @@ class Resblock(nn.Module):
 class ResNet_18(nn.Module): 
     def __init__(self, embedding_size=exp_args['embedding_size']): #embedding_size -> hyperparameter 설정
         super(ResNet_18, self).__init__()
-        self.melspec = ts.MelSpectrogram(
-            sample_rate = exp_args['sample_rate'], 
-            n_fft = exp_args['n_fft'], 
-            n_mels = exp_args['n_mels'], 
-            win_length = exp_args['win_length'], 
-            hop_length = exp_args['hop_length'], 
-            window_fn=torch.hamming_window).to(GPU)
         
         self.embedding_size = embedding_size
         
         self.preemphasis = AudioPreEmphasis(0.97)
-        self.conv0 = nn.Conv2d(in_channels=1, out_channels=64, kernel_size=7, stride=2, padding=3) 
-        self.bn1 = nn.BatchNorm2d(64)
+        self.conv0 = nn.Conv1d(in_channels=1, out_channels=64, kernel_size=7, stride=2, padding=3) 
+        self.bn1 = nn.BatchNorm1d(64)
         self.bn2 = nn.BatchNorm1d(512)
         self.bn3 = nn.BatchNorm1d(256)
         self.bn4 = nn.BatchNorm1d(self.embedding_size)
         self.bn5 = nn.BatchNorm1d(1211)
         self.relu = nn.ReLU()
-        self.maxpool = nn.MaxPool2d(kernel_size=3, stride=2, padding=1)
+        self.maxpool = nn.MaxPool1d(kernel_size=3, stride=2, padding=1)
 
         self.layer1 = nn.Sequential(
             Resblock(64, 64, 64, False),
@@ -92,7 +81,7 @@ class ResNet_18(nn.Module):
             Resblock(256, 512, 512, True),
             Resblock(512, 512, 512, False)
         )
-        self.avgpool = nn.AdaptiveAvgPool2d((1,1))
+        self.avgpool = nn.AdaptiveAvgPool1d(1)
         self.fc1 = nn.Linear(in_features=512, out_features=512)
         self.fc2 = nn.Linear(in_features=512, out_features=256)
         self.fc3 = nn.Linear(in_features=256, out_features=self.embedding_size) 
@@ -101,21 +90,19 @@ class ResNet_18(nn.Module):
     def forward(self, x, is_test = False): # x.size = (32, 1, 4*16000)
         x = x.to(GPU)
         x = self.preemphasis(x)
-        x = self.melspec(x) # (32, 1, 64, 320)
-        x = torch.log(x+1e-5)
-        if x.size(0) == 1:
-            x = torch.unsqueeze(x, 0)
-        x = self.conv0(x) # 
+        x = F.normalize(x, p = 2., dim = 2) # [:, 1, 51200]
+        
+        x = self.conv0(x) #  [-1, 64, 25600]
 
-        x = self.bn1(x)
-        x = self.relu(x)
-        x = self.maxpool(x) #
-        x = self.layer1(x) # 
-        x = self.layer2(x) # 
-        x = self.layer3(x) # 
-        x = self.layer4(x) # 
+        x = self.bn1(x) # [-1, 64, 25600]
+        x = self.relu(x) # [-1, 64, 25600]
+        x = self.maxpool(x) # [-1, 64, 12800]
+        x = self.layer1(x) # [-1, 64, 12800]
+        x = self.layer2(x) #  [-1, 128, 6400] 
+        x = self.layer3(x) # [-1, 256, 3200]
+        x = self.layer4(x) # [-1, 512, 1600]
 
-        x = self.avgpool(x) # 
+        x = self.avgpool(x) # [-1, 512, 1]
         
         x = x.view(x.size(0), -1) # 
 
