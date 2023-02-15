@@ -56,65 +56,69 @@ class ResNet_18(nn.Module):
         self.embedding_size = embedding_size
         
         self.preemphasis = AudioPreEmphasis(0.97)
-        self.conv0 = nn.Conv1d(in_channels=1, out_channels=64, kernel_size=7, stride=2, padding=3) 
-        self.bn1 = nn.BatchNorm1d(64)
-        self.bn2 = nn.BatchNorm1d(512)
-        self.bn3 = nn.BatchNorm1d(256)
-        self.bn4 = nn.BatchNorm1d(self.embedding_size)
-        self.bn5 = nn.BatchNorm1d(1211)
+        self.conv0 = nn.Conv1d(in_channels=1, out_channels=8, kernel_size=400, stride=160, padding=0) 
+        self.bn0 = nn.BatchNorm1d(8)
+        
+        
         self.relu = nn.ReLU()
         self.maxpool = nn.MaxPool1d(kernel_size=3, stride=2, padding=1)
 
         self.layer1 = nn.Sequential(
-            Resblock(64, 64, 64, False),
-            Resblock(64, 64, 64, False)
+            Resblock(8, 8, 8, False),
+            Resblock(8, 8, 8, False)
         )
         self.layer2 = nn.Sequential(
-            Resblock(64, 128, 128, True),
-            Resblock(128, 128, 128, False)
+            Resblock(8, 8, 8, True),
+            Resblock(8, 8, 8, False)
         )
         self.layer3 = nn.Sequential(
-            Resblock(128, 256, 256, True),
-            Resblock(256, 256, 256,False)
+            Resblock(16, 32, 32, True),
+            Resblock(32, 32, 32,False)
         )
         self.layer4 = nn.Sequential(
-            Resblock(256, 512, 512, True),
-            Resblock(512, 512, 512, False)
+            Resblock(32, 64, 64, True),
+            Resblock(64, 64, 64, False)
         )
-        self.avgpool = nn.AdaptiveAvgPool1d(1)
-        self.fc1 = nn.Linear(in_features=512, out_features=512)
-        self.fc2 = nn.Linear(in_features=512, out_features=256)
-        self.fc3 = nn.Linear(in_features=256, out_features=self.embedding_size) 
+        self.avgpool = nn.AdaptiveAvgPool1d(16)
+        
+        self.fc1 = nn.Linear(in_features=632, out_features=256)
+        self.bn1 = nn.BatchNorm1d(256)
+        self.fc2 = nn.Linear(in_features=256, out_features=self.embedding_size)
+        self.bn2 = nn.BatchNorm1d(self.embedding_size)
+        self.fc3 = nn.Linear(in_features=256, out_features=self.embedding_size)
+        self.bn3 = nn.BatchNorm1d(self.embedding_size) 
         self.fc4 = nn.Linear(in_features=self.embedding_size, out_features=1211)
+        self.bn4 = nn.BatchNorm1d(1211)
         
     def forward(self, x, is_test = False): # x.size = (32, 1, 4*16000)
         x = x.to(GPU)
         x = self.preemphasis(x)
         x = F.normalize(x, p = 2., dim = 2) # [:, 1, 51200]
         
-        x = self.conv0(x) #  [-1, 64, 25600]
+        x = self.conv0(x) #  [-1, 8, 25600]
+        x = self.bn0(x) # [-1, 8, 25600]
+        x = self.relu(x) # [-1, 8, 25600]
+        x = self.maxpool(x) # [-1, 8, 12800]
+        
+        x = self.layer1(x) # [-1, 8, 12800]
+        x = self.layer2(x) #  [-1, 16, 6400] 
+        # x = self.layer3(x) # [-1, 32, 3200]
+        # x = self.layer4(x) # [-1, 64, 1600]
 
-        x = self.bn1(x) # [-1, 64, 25600]
-        x = self.relu(x) # [-1, 64, 25600]
-        x = self.maxpool(x) # [-1, 64, 12800]
-        x = self.layer1(x) # [-1, 64, 12800]
-        x = self.layer2(x) #  [-1, 128, 6400] 
-        x = self.layer3(x) # [-1, 256, 3200]
-        x = self.layer4(x) # [-1, 512, 1600]
-
-        x = self.avgpool(x) # [-1, 512, 1]
+        #x = self.avgpool(x) # [-1, 64, 16]
         
         x = x.view(x.size(0), -1) # 
 
         
-        x = self.relu(self.bn2(self.fc1(x))) #
-        x = self.relu(self.bn3(self.fc2(x)))
-        x = self.bn4(self.fc3(x))
+        x = self.relu(self.bn1(self.fc1(x))) #
+        #x = self.relu(self.bn2(self.fc2(x)))
+        x = self.bn2(self.fc2(x))
+        #x = self.bn3(self.fc3(x))
         
         if is_test: # embedding 출력
             return x
         
-        x = self.bn5(self.fc4(x))
+        x = self.bn4(self.fc4(x))
 
         return x
 
