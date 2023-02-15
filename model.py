@@ -77,7 +77,7 @@ class ResNet_18(nn.Module):
         self.bn4 = nn.BatchNorm1d(self.embedding_size)
         self.bn5 = nn.BatchNorm1d(1211)
         self.relu = nn.ReLU()
-        self.maxpool = nn.MaxPool2d(kernel_size=3, stride=1, padding=1)
+        self.maxpool = nn.MaxPool2d(kernel_size=3, stride=2, padding=1)
 
         self.layer1 = nn.Sequential(
             Resblock(64, 64, 64, False),
@@ -127,7 +127,7 @@ class ResNet_18(nn.Module):
         
         x = self.relu(self.bn2(self.fc1(x))) #
         x = self.relu(self.bn3(self.fc2(x)))
-        x = self.relu(self.bn4(self.fc3(x)))
+        x = self.bn4(self.fc3(x))
         
         if is_test: # embedding 출력
             return x

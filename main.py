@@ -22,7 +22,7 @@ class Main:
         wandb.init(
             project = self.sys_args['wandb_project'],
             entity = self.sys_args['wandb_entity'],
-            name = "multilabel-random-baseline-epoch50"
+            name = "multilabel-random-baseline-epoch50-v3"
         )
         
         
@@ -79,7 +79,7 @@ class Main:
                 best_eer = eer
                 wandb.log({"best eer" : best_eer*100})
 
-        self.save(epoch,'baseline')
+        self.save(epoch,'baseline-v3')
         pre_epoch = epoch
         self.train_dataset.changeIntoMultiLabel(True)
 
@@ -105,7 +105,7 @@ class Main:
             
     def save(self,epoch,desc):
         # sys_args, exp_args = arguments.get_args()
-        torch.save(self.model, self.sys_args['path_save']+desc+str(epoch))
+        torch.save(self.model, self.sys_args['path_save']+desc+str(epoch)+'.pt')
     
     def restart(self,path):
         model = torch.load(path)
@@ -132,12 +132,12 @@ class Main:
                 best_eer = eer
                 wandb.log({"best eer" : best_eer*100})
             if epoch % 10 == 0:
-                torch.save(model,self.sys_args['path_save']+'multilabel-'+str(epoch))
+                torch.save(model,self.sys_args['path_save']+'multilabel-'+str(epoch)+'.pt')
             
 
 if __name__ == '__main__':
     #torch.multiprocessing.set_start_method("spawn")
     program = Main()
-    # program.start()
-    program.restart('baseline50')
+    program.start()
+    # program.restart('baseline50')
     

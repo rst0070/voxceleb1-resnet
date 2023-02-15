@@ -41,7 +41,7 @@ def get_args():
     experiment_args = {
         # experiment
         'epoch'             : 50,
-        'batch_size'        : 64,
+        'batch_size'        : 32,
 		'rand_seed'		    : 1,
         
         # model
