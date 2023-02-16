@@ -12,7 +12,7 @@ def get_args():
 	    'project'       : '',
 	    'name'          : 'experiment_001',
 	    'tags'          : ['', ''],
-	    'description'   : '~~기준, 뭐가 바뀌었는지 작성',
+	    'description'   : '',
 
 	    # log
         'path_save' : '/result.pth', # 모델을 저장할 위치
@@ -23,7 +23,7 @@ def get_args():
 	    'wandb_group'   : '',
         'wandb_name'    : 'waveform with log mel spec',
 	    'wandb_entity'  : 'irlab_undgrd',
-        'wandb_notes'   : 'waveform을 이용해 점수를 매긴다. feature extraction의 out channel이 16',
+        'wandb_notes'   : 'waveform을 이용해 점수를 매긴다. feature extraction의 out channel이 16. 앞쪽에 linearity 추가',
 
         # dataset
         'path_train_label'  :   'labels/train_label.csv',
