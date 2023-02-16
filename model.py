@@ -19,6 +19,57 @@ class AudioPreEmphasis(nn.Module):
     def forward(self, audio):
         audio = F.pad(audio,(1,0), 'reflect')
         return F.conv1d(audio, self.w.to(audio.device))
+    
+class FeatureExtract(nn.Module):
+    """
+    log mel spec과 waveform에서 해당 window의 중요도(커널과 waveform의 유사도)를 곱하는 연산
+    32개의 channel로 나온다.
+    """
+    def __init__(self):
+        super().__init__()
+        self.preemphasis = AudioPreEmphasis(0.97)
+        
+        self.melspec = ts.MelSpectrogram(
+            sample_rate = exp_args['sample_rate'], 
+            n_fft = exp_args['n_fft'], 
+            n_mels = exp_args['n_mels'], 
+            win_length = exp_args['win_length'], 
+            hop_length = exp_args['hop_length'], 
+            window_fn=torch.hamming_window
+        ).to(GPU)
+        
+        self.conv = nn.Conv1d(in_channels=1, out_channels=32, kernel_size=exp_args['win_length'], stride = exp_args['hop_length'], padding = 160)
+        self.bn = nn.BatchNorm1d(num_features=32)
+        self.sigmoid = nn.Sigmoid()
+        
+    def forward(self, waveform):
+        waveform = waveform.to(GPU)
+        waveform = self.preemphasis(waveform)
+        
+        # mel spectrogram
+        A = self.melspec(waveform) # (-1 , 1, 64, 320)
+        A = torch.log(A+1e-12) 
+        
+        # importance per window of mel spec
+        x = self.conv(waveform)
+        x = self.bn(x)
+        x = self.sigmoid(x) # (-1, 32, 320)
+        
+        y = []
+        for i in range(0, A.size(0)):
+            feature = []
+            a = A[i, 0]
+            for j in range(0, 32):
+                v = x[i, j]
+                feature.append(a * v)
+            y.append(torch.stack(feature))
+        
+        y = torch.stack(y)
+        return y 
+        
+        
+        
+
 
 class Resblock(nn.Module):
     def __init__(self, in_ch, hid_ch, out_ch, ps): #projection shortcut
@@ -68,21 +119,14 @@ class Resblock(nn.Module):
 class ResNet_18(nn.Module): 
     def __init__(self, embedding_size=exp_args['embedding_size']): #embedding_size -> hyperparameter 설정
         super(ResNet_18, self).__init__()
-        self.melspec = ts.MelSpectrogram(
-            sample_rate = exp_args['sample_rate'], 
-            n_fft = exp_args['n_fft'], 
-            n_mels = exp_args['n_mels'], 
-            win_length = exp_args['win_length'], 
-            hop_length = exp_args['hop_length'], 
-            window_fn=torch.hamming_window).to(GPU)
+        
         
         self.embedding_size = embedding_size
         
-        self.preemphasis = AudioPreEmphasis(0.97)
-        self.conv0 = nn.Conv2d(in_channels=1, out_channels=64, kernel_size=7, stride=2, padding=3) 
+        self.feature_extract = FeatureExtract()
+        
+        self.conv0 = nn.Conv2d(in_channels=32, out_channels=64, kernel_size=7, stride=2, padding=3) 
         self.bn0 = nn.BatchNorm2d(64)
-        
-        
         self.relu = nn.ReLU()
         self.maxpool = nn.MaxPool2d(kernel_size=3, stride=1, padding=1)
 
@@ -115,9 +159,8 @@ class ResNet_18(nn.Module):
         
     def forward(self, x, is_test = False): # x.size = (32, 1, 4*16000)
         x = x.to(GPU)
-        x = self.preemphasis(x)
-        x = self.melspec(x) # (32, 1, 64, 320)
-        x = torch.log(x+1e-5)        
+        
+        x = self.feature_extract(x)       
         
         x = self.conv0(x) # 
         x = self.bn0(x)
@@ -149,5 +192,7 @@ class ResNet_18(nn.Module):
 if __name__ == '__main__':
     from torchsummary import summary
     
-    model = ResNet_18().cuda()
-    summary(model, input_size=(1,int(16000*3.2)))
+    # model = ResNet_18().cuda()
+    # summary(model, input_size=(1,int(16000*3.2 - 1)))
+    model = FeatureExtract().cuda()
+    summary(model, input_size=(1,int(16000*3.2 - 1)))

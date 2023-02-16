@@ -21,9 +21,9 @@ def get_args():
         'wandb_key'     : '6ef86c7e660c02088ca226a60f3e1073b3f78876',
         'wandb_project' : 'Voxceleb1 resnet18',
 	    'wandb_group'   : '',
-        'wandb_name'    : 'baseline',
+        'wandb_name'    : 'waveform with log mel spec',
 	    'wandb_entity'  : 'irlab_undgrd',
-        'wandb_notes'   : '',
+        'wandb_notes'   : 'waveform을 이용해 점수를 매긴다.',
 
         # dataset
         'path_train_label'  :   'labels/train_label.csv',
