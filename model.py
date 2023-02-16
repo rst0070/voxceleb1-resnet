@@ -25,7 +25,10 @@ class FeatureExtract(nn.Module):
     log mel spec과 waveform에서 해당 window의 중요도(커널과 waveform의 유사도)를 곱하는 연산
     32개의 channel로 나온다.
     """
-    def __init__(self):
+    def __init__(self, out_channels):
+        """
+        out channels: waveform을 분석하는데 사용할 filter개수
+        """
         super().__init__()
         self.preemphasis = AudioPreEmphasis(0.97)
         
@@ -37,9 +40,11 @@ class FeatureExtract(nn.Module):
             hop_length = exp_args['hop_length'], 
             window_fn=torch.hamming_window
         ).to(GPU)
-        self.out_channels = 32
+        
+        self.out_channels = out_channels
+        
         self.conv = nn.Conv1d(in_channels=1, out_channels=self.out_channels, kernel_size=exp_args['win_length'], stride = exp_args['hop_length'], padding = 160)
-        self.bn = nn.BatchNorm1d(num_features=32)
+        self.bn = nn.BatchNorm1d(num_features = self.out_channels)
         self.sigmoid = nn.Sigmoid()
         
     def forward(self, waveform):
@@ -116,9 +121,10 @@ class ResNet_18(nn.Module):
         
         self.embedding_size = embedding_size
         
-        self.feature_extract = FeatureExtract()
+        self.feature_channel = 16
+        self.feature_extract = FeatureExtract(out_channels=self.feature_channel)
         
-        self.conv0 = nn.Conv2d(in_channels=32, out_channels=64, kernel_size=7, stride=2, padding=3) 
+        self.conv0 = nn.Conv2d(in_channels=self.feature_channel, out_channels=64, kernel_size=7, stride=2, padding=3) 
         self.bn0 = nn.BatchNorm2d(64)
         self.relu = nn.ReLU()
         self.maxpool = nn.MaxPool2d(kernel_size=3, stride=1, padding=1)

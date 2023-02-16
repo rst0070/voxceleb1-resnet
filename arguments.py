@@ -23,7 +23,7 @@ def get_args():
 	    'wandb_group'   : '',
         'wandb_name'    : 'waveform with log mel spec',
 	    'wandb_entity'  : 'irlab_undgrd',
-        'wandb_notes'   : 'waveform을 이용해 점수를 매긴다.',
+        'wandb_notes'   : 'waveform을 이용해 점수를 매긴다. feature extraction의 out channel이 16',
 
         # dataset
         'path_train_label'  :   'labels/train_label.csv',
