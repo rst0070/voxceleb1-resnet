@@ -49,20 +49,21 @@ class FeatureExtract(nn.Module):
         
     def forward(self, waveform):
         waveform = waveform.to(GPU)
-        waveform = self.preemphasis(waveform)
+        waveform = self.preemphasis(waveform) # [-1, 1, ...]
+        waveform = F.normalize(waveform, p = 2., dim = 2) # 크기 동일하게
         
         # A : mel spectrogram
         A = self.melspec(waveform) # (-1 , 1, 64, 320)
-        A = torch.log(A+1e-12) 
         A = A.repeat(1, self.out_channels, 1, 1) # (-1, self.out_channels, 64, 320)
         
         # x : importance per window of mel spec
-        x = self.conv(waveform)
+        x = self.conv(waveform + 1.)
         x = self.bn(x)
         x = self.sigmoid(x) # (-1, self.out_channels, 320)
         x = x.unsqueeze(dim = 2) # (-1, self.out_channels, 1, 320)
         
         y = A * x # 각 dim=1에 해당하는 행렬과 벡터간에 열 곱셈을 한다.
+        y = torch.log(y + 1e-12) 
         return y 
         
         
