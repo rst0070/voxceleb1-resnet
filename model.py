@@ -37,8 +37,8 @@ class FeatureExtract(nn.Module):
             hop_length = exp_args['hop_length'], 
             window_fn=torch.hamming_window
         ).to(GPU)
-        
-        self.conv = nn.Conv1d(in_channels=1, out_channels=32, kernel_size=exp_args['win_length'], stride = exp_args['hop_length'], padding = 160)
+        self.out_channels = 32
+        self.conv = nn.Conv1d(in_channels=1, out_channels=self.out_channels, kernel_size=exp_args['win_length'], stride = exp_args['hop_length'], padding = 160)
         self.bn = nn.BatchNorm1d(num_features=32)
         self.sigmoid = nn.Sigmoid()
         
@@ -46,25 +46,18 @@ class FeatureExtract(nn.Module):
         waveform = waveform.to(GPU)
         waveform = self.preemphasis(waveform)
         
-        # mel spectrogram
+        # A : mel spectrogram
         A = self.melspec(waveform) # (-1 , 1, 64, 320)
         A = torch.log(A+1e-12) 
+        A = A.repeat(1, self.out_channels, 1, 1) # (-1, self.out_channels, 64, 320)
         
-        # importance per window of mel spec
+        # x : importance per window of mel spec
         x = self.conv(waveform)
         x = self.bn(x)
-        x = self.sigmoid(x) # (-1, 32, 320)
+        x = self.sigmoid(x) # (-1, self.out_channels, 320)
+        x = x.unsqueeze(dim = 2) # (-1, self.out_channels, 1, 320)
         
-        y = []
-        for i in range(0, A.size(0)):
-            feature = []
-            a = A[i, 0]
-            for j in range(0, 32):
-                v = x[i, j]
-                feature.append(a * v)
-            y.append(torch.stack(feature))
-        
-        y = torch.stack(y)
+        y = A * x # 각 dim=1에 해당하는 행렬과 벡터간에 열 곱셈을 한다.
         return y 
         
         
@@ -192,7 +185,7 @@ class ResNet_18(nn.Module):
 if __name__ == '__main__':
     from torchsummary import summary
     
-    # model = ResNet_18().cuda()
-    # summary(model, input_size=(1,int(16000*3.2 - 1)))
-    model = FeatureExtract().cuda()
+    model = ResNet_18().cuda()
     summary(model, input_size=(1,int(16000*3.2 - 1)))
+    # model = FeatureExtract().cuda()
+    # summary(model, input_size=(1,int(16000*3.2 - 1)))
