@@ -55,7 +55,7 @@ class FeatureExtract(nn.Module):
         # A : mel spectrogram
         A = self.melspec(waveform) # (-1 , 1, 64, 320)
         A = A.repeat(1, self.out_channels, 1, 1) # (-1, self.out_channels, 64, 320)
-        A = torch.log(A + 1e-12)
+        #A = torch.log(A + 1e-12)
         
         # x : importance per window of mel spec
         x = self.conv1(waveform) # (-1, self.out_channels, 320)
@@ -64,9 +64,10 @@ class FeatureExtract(nn.Module):
         x = self.bn2(x)
         x = self.relu(x)
         x = x.unsqueeze(dim = 2) # (-1, self.out_channels, 1, 320)
+        x = x.repeat(1, 1, exp_args['n_mels'], 1) # (-1, self.out_channels, 64, 320)
         
-        y = A * x # 각 dim=1에 해당하는 행렬과 벡터간에 열 곱셈을 한다.
-        #y = torch.log(y + 1e-12) 
+        y = torch.stack((A, x), dim = 2) # (-1, self.out_channels, 2, 64, 320)
+        y = torch.log(y + 1e-12) 
         return y 
         
         
@@ -81,19 +82,19 @@ class Resblock(nn.Module):
         self.out_ch = out_ch
         self.ps = ps
 
-        self.conv1_ps = nn.Conv2d(in_channels=self.in_ch, out_channels=self.hid_ch, kernel_size=(3,3), stride=2, padding=1)
-        self.conv1 = nn.Conv2d(in_channels=self.in_ch, out_channels=self.hid_ch, kernel_size=(3,3), stride=1, padding=1)
-        self.conv2 = nn.Conv2d(in_channels=self.hid_ch, out_channels=self.out_ch, kernel_size=(3,3), stride=1, padding=1)
+        self.conv1_ps = nn.Conv3d(in_channels=self.in_ch, out_channels=self.hid_ch, kernel_size=(3,3), stride=2, padding=1)
+        self.conv1 = nn.Conv3d(in_channels=self.in_ch, out_channels=self.hid_ch, kernel_size=(3,3), stride=1, padding=1)
+        self.conv2 = nn.Conv3d(in_channels=self.hid_ch, out_channels=self.out_ch, kernel_size=(3,3), stride=1, padding=1)
 
         self.relu = nn.ReLU()
         
-        self.bn1 = nn.BatchNorm2d(self.hid_ch)
-        self.bn2 = nn.BatchNorm2d(self.out_ch)
+        self.bn1 = nn.BatchNorm3d(self.hid_ch)
+        self.bn2 = nn.BatchNorm3d(self.out_ch)
         
-        self.conv_ps = nn.Conv2d(in_channels=self.in_ch, out_channels=self.out_ch, kernel_size=(2,2), stride=2)
+        self.conv_ps = nn.Conv3d(in_channels=self.in_ch, out_channels=self.out_ch, kernel_size=(2,2), stride=2)
         # self.conv_ps = nn.Conv2d(in_channels=self.in_ch, out_channels=self.out_ch,kernel_size=(1,1))
-        self.maxpool_ps = nn.MaxPool2d(kernel_size=2, stride=2, padding=0)
-        self.bn_ps = nn.BatchNorm2d(self.out_ch)
+        self.maxpool_ps = nn.MaxPool3d(kernel_size=2, stride=2, padding=0)
+        self.bn_ps = nn.BatchNorm3d(self.out_ch)
 
     def forward(self, x):
         if self.ps:
@@ -126,7 +127,7 @@ class ResNet_18(nn.Module):
         self.embedding_size = embedding_size
         
         self.feature_channel = 16
-        self.feature_extract = FeatureExtract(out_channels=self.feature_channel)
+        self.feature_extract = FeatureExtract(out_channels=self.feature_channel)  # (-1, self.feature_channel, 2, 64, 320)
         
         self.conv0 = nn.Conv2d(in_channels=self.feature_channel, out_channels=64, kernel_size=7, stride=2, padding=3) 
         self.bn0 = nn.BatchNorm2d(64)
@@ -196,7 +197,7 @@ class ResNet_18(nn.Module):
 if __name__ == '__main__':
     from torchsummary import summary
     
-    model = ResNet_18().cuda()
-    summary(model, input_size=(1,int(16000*3.2 - 1)))
-    # model = FeatureExtract().cuda()
+    # model = ResNet_18().cuda()
     # summary(model, input_size=(1,int(16000*3.2 - 1)))
+    model = FeatureExtract(16).cuda()
+    summary(model, input_size=(1,int(16000*3.2 - 1)))
