@@ -4,7 +4,8 @@ RUN apt-get update
 
 RUN pip install torch==1.11.0+cu115 -f https://download.pytorch.org/whl/torch_stable.html
 RUN pip install torchaudio==0.11.0+cu115 -f https://download.pytorch.org/whl/torch_stable.html
-RUN pip install pip --upgrade
 RUN pip install wandb
+RUN pip install torchsummary
+RUN pip install pip --upgrade
 
 WORKDIR /app

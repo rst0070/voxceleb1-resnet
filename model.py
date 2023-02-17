@@ -23,7 +23,6 @@ class AudioPreEmphasis(nn.Module):
 class FeatureExtract(nn.Module):
     """
     log mel spec과 waveform에서 해당 window의 중요도(커널과 waveform의 유사도)를 곱하는 연산
-    32개의 channel로 나온다.
     """
     def __init__(self, out_channels):
         """
@@ -43,9 +42,11 @@ class FeatureExtract(nn.Module):
         
         self.out_channels = out_channels
         
-        self.conv = nn.Conv1d(in_channels=1, out_channels=self.out_channels, kernel_size=exp_args['win_length'], stride = exp_args['hop_length'], padding = 160)
-        self.bn = nn.BatchNorm1d(num_features = self.out_channels)
-        self.sigmoid = nn.Sigmoid()
+        self.conv1 = nn.Conv1d(in_channels=1, out_channels=self.out_channels, kernel_size=exp_args['win_length'], stride = exp_args['hop_length'], padding = 160)
+        self.bn1 = nn.BatchNorm1d(num_features = self.out_channels)
+        self.conv2 = nn.Conv1d(in_channels=self.out_channels, out_channels=self.out_channels, kernel_size=1, stride = 1) # linear layer역할
+        self.bn2 = nn.BatchNorm1d(num_features = self.out_channels)
+        self.relu = nn.ReLU()
         
     def forward(self, waveform):
         waveform = waveform.to(GPU)
@@ -57,9 +58,11 @@ class FeatureExtract(nn.Module):
         A = torch.log(A + 1e-12)
         
         # x : importance per window of mel spec
-        x = self.conv(waveform)
-        #x = self.bn(x)
-        #x = self.sigmoid(x) # (-1, self.out_channels, 320)
+        x = self.conv1(waveform) # (-1, self.out_channels, 320)
+        x = self.bn1(x)
+        x = self.conv2(x)
+        x = self.bn2(x)
+        x = self.relu(x)
         x = x.unsqueeze(dim = 2) # (-1, self.out_channels, 1, 320)
         
         y = A * x # 각 dim=1에 해당하는 행렬과 벡터간에 열 곱셈을 한다.
@@ -178,7 +181,8 @@ class ResNet_18(nn.Module):
 
         
         x = self.relu(self.bn1(self.fc1(x))) #
-        x = self.bn2(self.fc2(x)) # [batch, embedding_size]
+        x = self.relu(self.bn2(self.fc2(x))) # [batch, embedding_size]
+        x = F.normalize(x, dim = 1, p=2.)
         
         if is_test: # embedding 출력
             return x
