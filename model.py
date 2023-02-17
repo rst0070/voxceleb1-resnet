@@ -55,7 +55,7 @@ class FeatureExtract(nn.Module):
         # A : mel spectrogram
         A = self.melspec(waveform) # (-1 , 1, 64, 320)
         A = A.repeat(1, self.out_channels, 1, 1) # (-1, self.out_channels, 64, 320)
-        A = torch.log(A + 1e-12)
+        #A = torch.log(A + 1e-12)
         
         # x : importance per window of mel spec
         x = self.conv1(waveform) # (-1, self.out_channels, 320)
@@ -66,7 +66,7 @@ class FeatureExtract(nn.Module):
         x = x.unsqueeze(dim = 2) # (-1, self.out_channels, 1, 320)
         
         y = A * x # 각 dim=1에 해당하는 행렬과 벡터간에 열 곱셈을 한다.
-        #y = torch.log(y + 1e-12) 
+        y = torch.log(y + 1e-12) 
         return y 
         
         
