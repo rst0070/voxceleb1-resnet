@@ -181,7 +181,7 @@ class ResNet_18(nn.Module):
 
         
         x = self.relu(self.bn1(self.fc1(x))) #
-        x = self.relu(self.bn2(self.fc2(x))) # [batch, embedding_size]
+        x = self.bn2(self.fc2(x)) # [batch, embedding_size]
         x = F.normalize(x, dim = 1, p=2.)
         
         if is_test: # embedding 출력
