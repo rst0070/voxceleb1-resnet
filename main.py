@@ -13,15 +13,16 @@ import numpy as np
 class Main:
     def __init__(self):
         sys_args, exp_args = arguments.get_args()
+        rand_seed = exp_args['rand_seed']
         
         # seed 설정
-        torch.manual_seed(0)
-        torch.cuda.manual_seed(0)
-        torch.cuda.manual_seed_all(0)
-        np.random.seed(0)
+        torch.manual_seed(rand_seed)
+        torch.cuda.manual_seed(rand_seed)
+        torch.cuda.manual_seed_all(rand_seed)
+        np.random.seed(rand_seed)
         cudnn.benchmark = False
         cudnn.deterministic = True
-        random.seed(0)
+        random.seed(rand_seed)
         
         if sys_args['wandb_disabled']: # arguments에 wandb 설정확인(wandb loggin 끄는 코드)
             os.system("wandb disabled")
@@ -73,6 +74,7 @@ class Main:
     def save(self):
         sys_args, exp_args = arguments.get_args()
         torch.save(self.model, sys_args['path_save'])
+        wandb.save(sys_args['path_save'])
             
 
 if __name__ == '__main__':

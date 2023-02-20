@@ -21,14 +21,14 @@ def get_args():
         'wandb_key'     : '6ef86c7e660c02088ca226a60f3e1073b3f78876',
         'wandb_project' : 'Voxceleb1 resnet18',
 	    'wandb_group'   : '',
-        'wandb_name'    : 'waveform with log mel spec, robustness, log를 Ax에 적용',
+        'wandb_name'    : 'waveform - normalzing과 동일한 환경',
 	    'wandb_entity'  : 'irlab_undgrd',
         'wandb_notes'   : '',
 
         # dataset
-        'path_train_label'  :   'labels/train_label.csv',
+        'path_train_label'  :   'labels/tmp_train_label.csv',
         'path_train'        :   '/data/train',
-        'path_test_label'   :   'labels/trial_label.csv',
+        'path_test_label'   :   'labels/tmp_trial_label.csv',
         'path_test'         :   '/data/test',
 
         # processor
@@ -43,11 +43,11 @@ def get_args():
     experiment_args = {
         # experiment
         'epoch'             : 100,
-        'batch_size'        : 100,
-		'rand_seed'		    : 1,
+        'batch_size'        : 64,
+		'rand_seed'		    : 0, # 이전에도 항상 0으로 돌아갔었다. 이 파일의 값을 참조안했을뿐
         
         # model
-		'embedding_size'	: 256,
+		'embedding_size'	: 128,
         'aam_margin'        : 0.15,
         'aam_scale'         : 20,
         'spec_mask_F'       : 100,
