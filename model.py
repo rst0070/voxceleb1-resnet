@@ -22,52 +22,29 @@ class AudioPreEmphasis(nn.Module):
     
 class FeatureExtract(nn.Module):
     """
-    log mel spec과 waveform에서 해당 window의 중요도(커널과 waveform의 유사도)를 곱하는 연산
+    waveform에서 linear로 뽑아낸다.
     """
-    def __init__(self, out_channels):
-        """
-        out channels: waveform을 분석하는데 사용할 filter개수
-        """
+    def __init__(self):
         super().__init__()
-        self.preemphasis = AudioPreEmphasis(0.97)
         
-        self.melspec = ts.MelSpectrogram(
-            sample_rate = exp_args['sample_rate'], 
-            n_fft = exp_args['n_fft'], 
-            n_mels = exp_args['n_mels'], 
-            win_length = exp_args['win_length'], 
-            hop_length = exp_args['hop_length'], 
-            window_fn=torch.hamming_window
-        ).to(GPU)
         
-        self.out_channels = out_channels
         
-        self.conv1 = nn.Conv1d(in_channels=1, out_channels=self.out_channels, kernel_size=exp_args['win_length'], stride = exp_args['hop_length'], padding = 160)
-        self.bn1 = nn.BatchNorm1d(num_features = self.out_channels)
-        self.conv2 = nn.Conv1d(in_channels=self.out_channels, out_channels=self.out_channels, kernel_size=1, stride = 1) # linear layer역할
-        self.bn2 = nn.BatchNorm1d(num_features = self.out_channels)
+        self.conv1 = nn.Conv1d(in_channels=1, out_channels=1, kernel_size=exp_args['win_length'], stride = exp_args['hop_length'], padding = 160)
+        self.bn1 = nn.BatchNorm1d(num_features = 1)
+        self.lin_trans = nn.Linear(in_features=320, out_features=512)
         self.relu = nn.ReLU()
         
     def forward(self, waveform):
         waveform = waveform.to(GPU)
-        waveform = self.preemphasis(waveform) # [-1, 1, ...]
-        
-        # A : mel spectrogram
-        A = self.melspec(waveform) # (-1 , 1, 64, 320)
-        A = A.repeat(1, self.out_channels, 1, 1) # (-1, self.out_channels, 64, 320)
-        A = torch.log(A + 1e-12)
         
         # x : importance per window of mel spec
-        x = self.conv1(waveform) # (-1, self.out_channels, 320)
+        x = self.conv1(waveform) # (-1, 1, 320)
         x = self.bn1(x)
-        x = self.conv2(x)
-        x = self.bn2(x)
-        x = self.relu(x)
-        x = x.unsqueeze(dim = 2) # (-1, self.out_channels, 1, 320)
+        x = x.squeeze()# (-1, 320)
+        x = self.lin_trans(x)
+        x = self.relu(x) # (-1, 512)
         
-        y = A * x # 각 dim=1에 해당하는 행렬과 벡터간에 열 곱셈을 한다.
-        #y = torch.log(y + 1e-12) 
-        return y 
+        return x 
         
         
         
@@ -122,13 +99,23 @@ class ResNet_18(nn.Module):
     def __init__(self, embedding_size=exp_args['embedding_size']): #embedding_size -> hyperparameter 설정
         super(ResNet_18, self).__init__()
         
+        self.preemphasis = AudioPreEmphasis(0.97)
+        
+        self.melspec = ts.MelSpectrogram(
+            sample_rate = exp_args['sample_rate'], 
+            n_fft = exp_args['n_fft'], 
+            n_mels = exp_args['n_mels'], 
+            win_length = exp_args['win_length'], 
+            hop_length = exp_args['hop_length'], 
+            window_fn=torch.hamming_window
+        ).to(GPU)
+        
         
         self.embedding_size = embedding_size
         
-        self.feature_channel = 16
-        self.feature_extract = FeatureExtract(out_channels=self.feature_channel)
+        self.feature_extract = FeatureExtract()
         
-        self.conv0 = nn.Conv2d(in_channels=self.feature_channel, out_channels=64, kernel_size=7, stride=2, padding=3) 
+        self.conv0 = nn.Conv2d(in_channels=1, out_channels=64, kernel_size=7, stride=2, padding=3) 
         self.bn0 = nn.BatchNorm2d(64)
         self.relu = nn.ReLU()
         self.maxpool = nn.MaxPool2d(kernel_size=3, stride=1, padding=1)
@@ -151,7 +138,7 @@ class ResNet_18(nn.Module):
         )
         self.avgpool = nn.AdaptiveAvgPool2d((1,1))
         
-        self.fc1 = nn.Linear(in_features=512, out_features=256)
+        self.fc1 = nn.Linear(in_features=1024, out_features=256) # melspec: 512, waveform: 512
         self.bn1 = nn.BatchNorm1d(256)
         
         self.fc2 = nn.Linear(in_features=256, out_features=self.embedding_size)
@@ -163,7 +150,11 @@ class ResNet_18(nn.Module):
     def forward(self, x, is_test = False): # x.size = (32, 1, 4*16000)
         x = x.to(GPU)
         
-        x = self.feature_extract(x)       
+        wf = self.feature_extract(x)
+        
+        x = self.melspec(x)
+        x = torch.log(x + 1e-12)
+        
         
         x = self.conv0(x) # 
         x = self.bn0(x)
@@ -179,9 +170,9 @@ class ResNet_18(nn.Module):
         
         x = x.view(x.size(0), -1) # 
 
-        
+        x = torch.cat((x, wf), dim = 1)
         x = self.relu(self.bn1(self.fc1(x))) #
-        x = self.bn2(self.fc2(x)) # [batch, embedding_size]
+        x = self.relu(self.bn2(self.fc2(x))) # [batch, embedding_size]
         x = F.normalize(x, dim = 1, p=2.)
         
         if is_test: # embedding 출력

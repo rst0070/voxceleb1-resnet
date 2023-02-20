@@ -21,7 +21,7 @@ def get_args():
         'wandb_key'     : '6ef86c7e660c02088ca226a60f3e1073b3f78876',
         'wandb_project' : 'Voxceleb1 resnet18',
 	    'wandb_group'   : '',
-        'wandb_name'    : 'waveform - normalzing과 동일한 환경 - embedding의 relu 제거함',
+        'wandb_name'    : 'waveform concat',
 	    'wandb_entity'  : 'irlab_undgrd',
         'wandb_notes'   : '',
 
