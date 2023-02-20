@@ -26,9 +26,9 @@ def get_args():
         'wandb_notes'   : '',
 
         # dataset
-        'path_train_label'  :   'labels/tmp_train_label.csv',
+        'path_train_label'  :   'labels/train_label.csv',
         'path_train'        :   '/data/train',
-        'path_test_label'   :   'labels/tmp_trial_label.csv',
+        'path_test_label'   :   'labels/trial_label.csv',
         'path_test'         :   '/data/test',
 
         # processor
