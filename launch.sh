@@ -1,3 +1,3 @@
-sudo docker container rm wf_embsize_non_relu
-sudo docker build -t vox1_rst .
-sudo nvidia-docker run --name wf_embsize_non_relu --shm-size=50gb -v /home/yeongsoo/datas/VoxCeleb1:/data -t vox1_rst:latest
+#sudo docker container rm wf_concat_reduce_fc
+sudo docker build -t wf_concat_reduce_fc .
+sudo nvidia-docker run --name wf_concat_reduce_fc --shm-size=50gb -v /home/yeongsoo/datas/VoxCeleb1:/data -t wf_concat_reduce_fc:latest

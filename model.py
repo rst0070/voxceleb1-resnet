@@ -138,14 +138,12 @@ class ResNet_18(nn.Module):
         )
         self.avgpool = nn.AdaptiveAvgPool2d((1,1))
         
-        self.fc1 = nn.Linear(in_features=1024, out_features=256) # melspec: 512, waveform: 512
-        self.bn1 = nn.BatchNorm1d(256)
+        self.fc1 = nn.Linear(in_features=1024, out_features=self.embedding_size) # melspec: 512, waveform: 512
+        self.bn1 = nn.BatchNorm1d(self.embedding_size)
         
-        self.fc2 = nn.Linear(in_features=256, out_features=self.embedding_size)
-        self.bn2 = nn.BatchNorm1d(self.embedding_size)
+        self.fc2 = nn.Linear(in_features=self.embedding_size, out_features=1211)
+        self.bn2 = nn.BatchNorm1d(1211)
         
-        self.fc3 =  nn.Linear(in_features=self.embedding_size, out_features=1211)
-        self.bn3 = nn.BatchNorm1d(1211)
         
     def forward(self, x, is_test = False): # x.size = (32, 1, 4*16000)
         x = x.to(GPU)
@@ -171,14 +169,13 @@ class ResNet_18(nn.Module):
         x = x.view(x.size(0), -1) # 
 
         x = torch.cat((x, wf), dim = 1)
-        x = self.relu(self.bn1(self.fc1(x))) #
-        x = self.relu(self.bn2(self.fc2(x))) # [batch, embedding_size]
+        x = self.relu(self.bn1(self.fc1(x)))  # [batch, embedding_size]
         x = F.normalize(x, dim = 1, p=2.)
         
         if is_test: # embedding 출력
             return x
         
-        x = self.bn3(self.fc3(x))
+        x = self.bn2(self.fc2(x))
 
         return x
 
