@@ -169,12 +169,13 @@ class ResNet_18(nn.Module):
         x = x.view(x.size(0), -1) # 
 
         x = torch.cat((x, wf), dim = 1)
-        x = self.relu(self.bn1(self.fc1(x)))  # [batch, embedding_size]
-        x = F.normalize(x, dim = 1, p=2.)
+        x = self.bn1(self.fc1(x))  # [batch, embedding_size]
+        #x = F.normalize(x, dim = 1, p=2.)
         
         if is_test: # embedding 출력
             return x
         
+        x = self.relu(x)
         x = self.bn2(self.fc2(x))
 
         return x

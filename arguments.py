@@ -21,7 +21,7 @@ def get_args():
         'wandb_key'     : '6ef86c7e660c02088ca226a60f3e1073b3f78876',
         'wandb_project' : 'Voxceleb1 resnet18',
 	    'wandb_group'   : '',
-        'wandb_name'    : 'waveform concat, reduce fc layer, norm emb',
+        'wandb_name'    : 'waveform concat, reduce fc layer, ,norm emb x, relu after emb',
 	    'wandb_entity'  : 'irlab_undgrd',
         'wandb_notes'   : '',
 
